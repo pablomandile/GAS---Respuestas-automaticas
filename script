@@ -1,0 +1,11 @@
+//****************************************************
+// Cambiar sólo el título del evento
+// Ejemplo: var TituloEvento = "Karma y Vacuidad";
+
+var TituloEvento = "La vacuidad del cuerpo";
+
+function onOpen(e) {BibRespuestaAuto.formateoPlanilla();}
+function emailOnFormSubmit(e) {
+BibRespuestaAuto.procesoRespuestas(e, TituloEvento);
+}
+//****************************************************
