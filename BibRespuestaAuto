@@ -1,0 +1,582 @@
+/*************************************************************
+*** PRIMER PROCESO QUE SE EJECUTA AL ABRIR LA PLANILLA     ***
+***VINCULADA CON EL EVENTO PARA SU FORMATEO                ***
+*************************************************************/
+function formateoPlanilla(){
+  // Add a custom menu to the spreadsheet.
+  /* SpreadsheetApp.getUi() // Or DocumentApp, SlidesApp, or FormApp.
+      .createMenu('Custom Menu')
+      .addItem('First item', 'menuItem1')
+      .addToUi();*/
+  var ActiveSheet = SpreadsheetApp.getActiveSheet();
+  var ActiveCol = ActiveSheet.getLastColumn();
+  var sheet = ActiveSheet.getDataRange().getValues();
+  var colTemporal = "";
+  colTemporal = sheet[0].indexOf('Envio Info Abono')+1;  
+  if (colTemporal == 0){
+    ActiveSheet.insertColumnAfter(ActiveCol);
+    ActiveSheet.getRange(1, ActiveCol+1).setValue('Pendiente');
+    ActiveSheet.insertColumnAfter(ActiveCol+1);
+    ActiveSheet.getRange(1, ActiveCol+2).setValue('Envio Info');
+    ActiveSheet.insertColumnAfter(ActiveCol+2);
+    ActiveSheet.getRange(1, ActiveCol+3).setValue('Envio Info TK');
+    ActiveSheet.insertColumnAfter(ActiveCol+3);
+    ActiveSheet.getRange(1, ActiveCol+4).setValue('Envio Info Abono');
+    var MaxCols = ActiveSheet.getMaxColumns();
+    for (var i = 0; i < MaxCols; i++){
+      ActiveSheet.getRange(1, i+1).setBackground('#CFE2F3');
+      ActiveSheet.autoResizeColumn(i+1);
+    }
+    SpreadsheetApp.flush();
+  }
+}
+
+/*************************************************************
+*** FUNCIÓN PRINCIPAL DE PRECESO DE LOS DATOS ENVIADOS     ***
+*** DESDE EL FORMULARIO DE REGISTRO                        ***
+*** CALCÚLA QUE PREGUTAS VIENEN EN EL FORMULARIO           ***
+*** TOMA TODOS LOS DATOS QUE CONTESTO EL CLIENTE DE LA     ***
+*** PLANILLA DE RESPUESTAS                                 ***
+*** CALCULA SI ES 2X1 Y TODOS LOS DESCUENTOS SEGÚN TK      ***
+*** LLAMA A TODAS LAS DEMÁS FUNCIONES                      ***
+*** ESCRIBE EL ESTADO EN LA PLANILLA, PENDIENTE Y ENVIOS   ***
+*************************************************************/
+function procesoRespuestas(e, TituloEvento){
+    var ActiveSheet = SpreadsheetApp.getActiveSheet();
+    var ActiveRow = ActiveSheet.getLastRow();
+    var sheet = ActiveSheet.getDataRange().getValues();
+    var flagtkab = true;
+    var flagtipoTk = true;
+    var flagtarjetasyab = true;
+    var Preguntas = {
+              infoTKAB : '¿Te gustaría información de cómo obtener la Tarjeta Kadampa o Abono Mensual?',
+              pais : '¿De qué país eres?',
+              modalidad : '¿Bajo que modalidad vas a participar de la clase?',
+              nombre : 'Nombre',
+              nombreAdulto : 'Nombre y apellido del Adulto que acompañara al niñ@',
+              apellido : 'Apellido',
+              mail : 'Dirección de correo electrónico (e-mail)',
+              tkoabono : '¿Tenés ABONO MENSUAL o TARJETA KADAMPA?',
+              tipodetk : '¿Tenés Tarjeta Kadampa?',
+              invitadoNombre : 'NOMBRE Y APELLIDO DEL INVITADO/A',
+              tarjetasyabono: '¿Tenés ABONO MENSUAL o alguna de nuestras TARJETAS KADAMPAS?',
+              invitadoMail : 'Dirección de correo electrónico INVITADO/A'
+    }
+  
+    var infoTKAbono = (buscoColumna(Preguntas.infoTKAB,sheet) != 0) ? valorPlanilla(Preguntas.infoTKAB) : "";
+    
+    var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "ARGENTINA";
+
+    var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "ONLINE";
+
+    var Nombre = (buscoColumna(Preguntas.nombre,sheet) != 0) ? valorPlanilla(Preguntas.nombre) : "";
+    if (Nombre == "") {
+      Nombre = (buscoColumna(Preguntas.nombreAdulto,sheet) != 0) ? valorPlanilla(Preguntas.nombreAdulto) : "";
+    }
+    var Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
+   
+    var mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
+   
+    var TKAbono = (buscoColumna(Preguntas.tkoabono,sheet) != 0) ? valorPlanilla(Preguntas.tkoabono) : "VALOR UNICO";
+    if (buscoColumna(Preguntas.tkoabono,sheet) != 0){flagtipoTk = false; flagtarjetasyab = false;} 
+
+    var TipoTK = (buscoColumna(Preguntas.tipodetk,sheet) != 0) ? valorPlanilla(Preguntas.tipodetk) : "VALOR UNICO";
+    if (buscoColumna(Preguntas.tipodetk,sheet) != 0){flagtkab = false; flagtarjetasyab = false;} 
+  
+    var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
+    if (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0){flagtkab = false; flagtipoTk = false ;} 
+
+    var datosEvento = buscaCurso(TituloEvento, Pais);
+    var datosMail = CargoDatosMail();    
+
+    if (datosEvento.Tipo == "Clase día del Amigo 2x1"){
+      var claseInvitacion = {
+        invitadoNombre : (buscoColumna(Preguntas.invitadoNombre,sheet) != 0) ? valorPlanilla(Preguntas.invitadoNombre) : "",
+        invitadoMail : (buscoColumna(Preguntas.invitadoMail,sheet) != 0) ? valorPlanilla(Preguntas.invitadoMail) : "",
+        invitadoSubject : "REGALO - " + datosEvento.Asunto
+      }
+    } else {
+      var claseInvitacion = {
+        invitadoNombre : "",
+        invitadoMail : "",
+        invitadoSubject : ""
+      }
+    }
+
+  // Verificar la inscripción, cuánto debe abonar dependiendo si tiene tk o abono
+  if (flagtkab){
+    switch (TKAbono)  {
+      case 'ABONO MENSUAL':
+        datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoAbono;
+        break;
+      case 'TARJETA KADAMPA':
+        datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
+        break; 
+      case 'NINGUNO DE LOS ANTERIORES':
+        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+        datosEvento.aPagar = datosEvento.ValorEvento;
+      case 'VALOR UNICO':
+        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+        datosEvento.aPagar = datosEvento.ValorEvento;
+        flagtipoTk = false;
+        flagtarjetasyab = false;
+        break; 
+      default:
+        break;
+    }  
+  }
+  if (flagtipoTk){
+      // Verificar la inscripción, cuánto debe abonar dependiendo de que TK tiene
+    switch (TipoTK)  {
+      case 'SI, tengo: TARJETA KADAMPA CORAZÓN':
+        datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
+        break;
+      case 'SI, tengo: TARJETA KADAMPA BENEFACTOR':
+        datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
+        break; 
+      case 'NINGUNO DE LOS ANTERIORES':
+        datosEvento.aPagar = datosEvento.ValorEvento;
+        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+      case 'VALOR UNICO':
+        datosEvento.aPagar = datosEvento.ValorEvento;
+        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+        flagtarjetasyab = false;
+        break; 
+      default:
+        break;
+    }  
+  }
+    if (flagtarjetasyab){
+    switch (TipoTKyAbono)  {
+      case 'ABONO MENSUAL':
+        datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoAbono;
+        break;
+      case 'TARJETA KADAMPA CORAZÓN':
+        datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
+        break; 
+      case 'TARJETA KADAMPA BENEFACTOR':
+        datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
+        break; 
+      case 'NINGUNO DE LOS ANTERIORES':
+        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+        datosEvento.aPagar = datosEvento.ValorEvento;
+      case 'VALOR UNICO':
+        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+        datosEvento.aPagar = datosEvento.ValorEvento;
+        break; 
+      default:
+        break;
+    }  
+  }
+  
+  datosEvento = ArmoPago(datosEvento, datosMail);
+  datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
+  if (datosEvento.Tipo == "Preceptos"){
+    datosEvento = Preceptos(datosMail, datosEvento, TituloEvento);
+  }
+  ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet);
+
+  if (infoTKAbono != ""){
+    envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
+  }
+
+  ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
+  datosEvento.aPagar).setHorizontalAlignment('right');
+  ActiveSheet.getRange(ActiveRow, buscoColumna('Envio Info',sheet)).setValue("CORREO ENVIADO").setBackground('green').setFontColor('white');
+  ActiveSheet.getRange(ActiveRow, 1).setBackground('#b3d1ff');
+  SpreadsheetApp.flush();
+  function valorPlanilla(valCampo){
+      return ActiveSheet.getRange(ActiveRow, buscoColumna(valCampo,sheet)).getValue()
+  }
+/*************************************************************
+***              FIN CÓDIGO FUNCIÓN PRINCIPAL              ***
+***                                                        ***
+*************************************************************/
+
+/*************************************************************
+*** DETERMINO CUÁL ES EL PAIS PARA SABER QUÉ MONEDA Y      ***
+*** TIPO DE PAGO USAR                                      ***
+*************************************************************/
+  function determinoPaisPago(Pais, datosEvento, datosMail){
+    if (Pais == "URUGUAY"){
+      datosEvento.ValorEvento = datosEvento.ValorDolares;
+      datosEvento.Moneda = "US";
+      datosMail.TextoInicial += datosMail.infoPagoPaypal;
+      return datosEvento.BotonPagoDolares;
+    }
+    return datosEvento.botonPago;
+  }
+}
+
+/*************************************************************
+*** CHEQUEA LA FECHA PARA SABER SI ESTÁ ACTIVO EL FORM     ***
+*** O DEBE DESACTIVARLO                                    ***
+*************************************************************/
+function desactivarFormenFecha(i, infoFechaCierre){
+  var DiaActual = new Date();
+  var FechaCierre = new Date(infoFechaCierre);
+  if (DiaActual.getTime() >= FechaCierre.getTime()){
+      var AS = SpreadsheetApp.getActiveSheet();
+      var NombreFormActivo = AS.getFormUrl()
+      var Form = FormApp.openByUrl(NombreFormActivo);
+      Form.setAcceptingResponses(false);
+    }
+}
+
+/*************************************************************
+*** TRAE TODOS LOS DATOS PARA CONFORMAR EL EMAIL DE        ***
+*** RESPUESTA DESDE LA PLANILLA INFORMACIÓN DE CURSOS /    ***
+*** MAILINFO                                               ***
+*************************************************************/
+function CargoDatosMail(){
+  var ss = SpreadsheetApp.openById("1zVvWhDAfTVPZUkXxnb5qntpkRSWTDT8KoSF7QZYlRwE");
+  var sheetDatosMail = ss.getSheetByName('MailInfo');
+  var DM = sheetDatosMail.getDataRange().getValues();
+
+  //Retorno resultados en array associativo
+      var infMail = {
+        botonPagoAbono:valorPlanilla('botonPagoAbono'), 
+        TextoInicial:valorPlanilla('TextoInicial'),
+        TextoInicialConfirmado:valorPlanilla('TextoInicialConfirmado'), 
+        infoAccesoOnline:valorPlanilla('infoAccesoOnline'),
+        infoAccesoPresencial:valorPlanilla('infoAccesoPresencial'),
+        infoAccesoOnlineLINK:valorPlanilla('infoAccesoOnlineLINK'),
+        infoAccesoMeditacionChicos:valorPlanilla('infoAccesoMeditacionChicos'),
+        Abono:valorPlanilla('Abono'),
+        Saludo:valorPlanilla('Saludo'),
+        Dudas:valorPlanilla('Dudas'),
+        PagoTransfer:valorPlanilla('pagoTransfer'),
+        infoAccesoPreceptos:valorPlanilla('Preceptos'),
+        ValorAbono:valorPlanilla('ValorAbono'),
+        envioInfoTK:valorPlanilla('envioInfoTK'),
+        infoPagoPaypal:valorPlanilla('infoPagoPaypal')
+      };
+    return infMail;
+    function valorPlanilla(valCampo){
+      return sheetDatosMail.getRange(2, buscoColumna(valCampo,DM)).getValue()
+    }
+}
+
+/*************************************************************
+*** SEGÚN EL NOMBRE DEL CURSO INGRESADO, LO BUSCA EN       ***
+*** INFORMACIÓN DE CURSOS / CURSOS Y TRAE TODOS LOS DATOS  ***
+*** CALCÚLA SI TIENE FECHA DE EXPIRACIÓN EL FORMULARIO     ***
+*** CALCÚLA SI ESTÁ O NO EN FECHA DE DESCUENTO POR PAGO    ***
+*** ADELANTADO                                             ***
+*************************************************************/
+function buscaCurso(TituloEvento, Pais){
+  var ss = SpreadsheetApp.openById("1zVvWhDAfTVPZUkXxnb5qntpkRSWTDT8KoSF7QZYlRwE");
+  var sheetDatosCursos = ss.getSheetByName("Cursos");
+  var DC = sheetDatosCursos.getDataRange().getValues();
+
+  var datos = sheetDatosCursos.getRange(2, 1, sheetDatosCursos.getLastRow(),sheetDatosCursos.getLastColumn()).getValues();
+  for(var i = 0;i<datos.length; i++){
+    if(datos[i][0] == TituloEvento ){
+      i=i+2;
+      var infoFechaCierre = valorPlanilla('infoFechaCierre');
+      if (infoFechaCierre != "") {
+        desactivarFormenFecha(i, infoFechaCierre);
+      }
+      var ValorEvento = valorPlanilla('ValorGeneral');
+      var ValorTKCorazon = valorPlanilla('ValorTKCorazon');
+      var SinDescuentoTK = valorPlanilla('SinDescuentoTK');
+      var SinDescuentoG = valorPlanilla('SinDescuentoG');
+      var SinDescuentoAb = valorPlanilla('SinDescuentoAb');
+      var ValorAbono = valorPlanilla('ValorAbono');
+      var ValorDolares = valorPlanilla('ValorDolares');
+      var SinDescuentoDol = valorPlanilla('SinDescuentoDol');
+      var BotonPagoDolares = valorPlanilla('BotonPagoDolares');
+      var BotonPagoDolSinDesc = valorPlanilla('BotonPagoDolSinDesc');
+      var infoPrograma = valorPlanilla('Programa');
+      var infoFechaDescuento = valorPlanilla('Precio desc anticipado');
+      if (infoFechaDescuento != "") {
+        var DiaActual = new Date();
+        var FechaCierre = new Date(infoFechaDescuento);
+        if (DiaActual.getTime() >= FechaCierre.getTime()){
+            if (SinDescuentoG != ""){
+                ValorEvento = SinDescuentoG;
+            }
+            if (SinDescuentoTK != ""){
+              ValorTKCorazon = SinDescuentoTK;
+            }
+            if (SinDescuentoAb != ""){
+                ValorAbono = SinDescuentoAb;
+            }
+          if (Pais == "URUGUAY"){
+            ValorDolares = SinDescuentoDol;
+            BotonPagoDolares = BotonPagoDolSinDesc;
+          }
+        }
+      }
+
+      //RETORNO VALORES EN OBJETO
+      var infCurso = {
+        ValorEvento:ValorEvento, 
+        aPagar:ValorEvento, 
+        Asunto:valorPlanilla('Tipo') + " " + valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + " - " + TituloEvento,
+        subject:"",
+        FechaEvento:valorPlanilla('Fecha'), 
+        HoraEvento:valorPlanilla('Hora'), 
+        Tipo:valorPlanilla('Tipo'),
+        Disponibilidad:valorPlanilla('Disponibilidad'), 
+        LugarEvento:valorPlanilla('Lugar'), 
+        botonPago:valorPlanilla('BotondePago'),
+        BotondePago1Dia:valorPlanilla('BotondePago1Dia'),
+        ValorTKCorazon:ValorTKCorazon,
+        ValorTKBenefactor:valorPlanilla('ValorTKBenefactor'),
+        Valor1Dia:valorPlanilla('Valor1Dia'),
+        ValorAbono:ValorAbono,
+        BotondePagoTKCorazon:valorPlanilla('BotondePagoTKCorazon'),
+        BotondePagoTKBenefactor:valorPlanilla('BotondePagoTKBenefactor'),
+        BotondePagoAbono:valorPlanilla('BotondePagoAbono'),
+        LineasDePago:"",
+        TextoInicial:"",
+        infoAcceso:"",
+        pagoTransfer:"",
+        ValorDolares:ValorDolares,
+        SinDescuentoDol:SinDescuentoDol,
+        BotonPagoDolares:BotonPagoDolares,
+        BotonPagoDolSinDesc:BotonPagoDolSinDesc,
+        infoPrograma:infoPrograma,
+        LinkYoutube:valorPlanilla('LinkYoutube'),
+        TextoLink:"<br><strong>LINK DE ACCESO: </strong>",
+        AvisoOnline:"<br><br><font size='2' color=\"red\"><strong>La clase se activará el " + 
+                    valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong></font>",
+        Moneda:"$"
+      };
+    return infCurso;
+    }
+  }
+  function valorPlanilla(valCampo){
+      return sheetDatosCursos.getRange(i, buscoColumna(valCampo,DC)).getValue();
+  }
+}
+
+/*************************************************************
+*** TOMA TODOS LOS DATOS DEL CLIENTE Y CONFORMA EL         ***
+*** CUERPO, ASUNTO Y ENCABEZADO DEL MAIL EN HTML           ***
+*** CALCÚLA SI HAY VARIOS LINKS DE VIDEOS Y LOS SEPARA     ***
+*** CALCÚLA SI HAY INVITADOS Y LES ENVÍA OTRO MAIL         ***
+*************************************************************/
+function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet){
+  // Armado de información del evento
+  var encabezadoMail = "<table width='600' border='0' align='center' bgcolor='#e6f1fa' cellpadding='0' cellspacing='0'>"+
+        "<tr><td><img src='https://meditarenargentina.org/mailKadampa/header.png' alt='Social Media' width='600' height='60' usemap='#m_-6367196319079066917_Redes' title='CMKA Social' border='0' style='display:block'>"+
+            "<map name='m_-6367196319079066917_Redes' id='m_-6367196319079066917Redes'>"+
+            "<area shape='rect' coords='15,14,40,40' href='https://www.facebook.com/meditarenargentina' alt='Facebook CMKA' target='_blank'>"+
+            "<area shape='rect' coords='50,14,80,40' href='https://twitter.com/meditarenarg' alt='Twitter CMKA' target='_blank'>"+
+            "<area shape='rect' coords='85,14,110,40' href='https://www.instagram.com/meditarenargentina/' alt='Instagram CMKA' target='_blank'>"+
+            "<area shape='rect' coords='120,14,150,40' href='https://www.youtube.com/channel/UC8Bmrclk97g2onCsWRwZCyw' alt='Youtube CMKA' target='_blank'>"+
+            "<area shape='rect' coords='385,14,590,36' href='https://meditarenargentina.org/' alt='WEB CMKA' target='_blank'>"+
+            "</map></td></tr><tr bgcolor='#fff'><td><img src='https://meditarenargentina.org/mailKadampa/head.png' width='600' style='display:block' alt='Reiteración de pedido'>"+
+            "</td></tr><tr><td valign='middle' style='padding:30px 28px;font-family:Arial,Helvetica,sans-serif;font-size:10pt;line-height:20px'>";
+  var inicioPieMail = "</td></tr><tr height='100' bgcolor='#2784d6'><td valign='middle' style='padding:5px 18px;font-family:Arial,Helvetica,sans-serif;font-size:10pt;line-height:20px'>";
+  var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
+
+  var DatosEvento = "<br/><font size='3' color=\"black\"><strong>DETALLES DEL EVENTO: </strong></font>" + "<br/>Nombre del evento: " + 
+    "<font color='#369bd1'><strong>" + TituloEvento + "</strong></font>" + "<br/>Fecha y hora: " + "<font color=\"black\">" + 
+    datosEvento.FechaEvento + " " + datosEvento.HoraEvento + "</font>" + "<br/>Disponible por: " + 
+    "<font color=\"black\">" + datosEvento.Disponibilidad + "</font>" + "<br/>Lugar: <strong>" + 
+    datosEvento.LugarEvento + "</strong>";
+  // emailBody is for those devices that can't render HTML, is plain text
+  var emailBody = "¡Hola! " + "\nGracias por tu inscripción al Curso " + TituloEvento + "\nen fecha " +
+        "\nPróximamente recibirás un email con más detalles sobre éste evento y tu información de pago." + "\nMuchas Gracias";
+  
+  separoLinksYoutube();
+  
+  var htmlBody =  encabezadoMail + "<font size = '3' color=\"black\">¡Hola " + "<font color=\"black\"><strong>" + Nombre + " " + Apellido + 
+    "</strong></font>" + "!</font>" + datosEvento.TextoInicial + datosEvento.LineasDePago +  
+    "<br/><br/><font size='3' color=\"black\"><strong>INFORMACIÓN IMPORTANTE: </strong></font><br/>" +
+    DatosEvento + datosEvento.infoPrograma + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
+    datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + datosMail.Saludo + finPieMail;
+
+  // More info for Advanced Options Parameters 
+  // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
+  var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+  MailApp.sendEmail(mail, datosEvento.subject, emailBody, advancedOpts);
+
+  if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
+    console.log(claseInvitacion.invitadoMail);
+    var htmlBodyinvitado =  encabezadoMail + "<font size = '3' color=\"black\">¡Hola " + "<font color=\"black\"><strong>" +
+    claseInvitacion.invitadoNombre + "</strong></font>" + "!</font>" + "<br/><br/><font size = '3' color=\"black\">Te contamos que " 
+    + Nombre + " " + Apellido + " te invitó a una clase de meditación <br/>" + " por el día del amigo! <br/></font>" +    
+    "<br/><br/><font size='3' color=\"black\"><strong>INFORMACIÓN IMPORTANTE: </strong></font><br/>" +
+    DatosEvento + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
+    datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + datosMail.Saludo + finPieMail;
+    var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBodyinvitado};
+    MailApp.sendEmail(claseInvitacion.invitadoMail, claseInvitacion.invitadoSubject, emailBody, advancedOpts);
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Dirección de correo electrónico INVITADO/A',sheet)).setBackground('green').setFontColor('white');
+  }
+  
+  // SI HAY MÁS DE UN VÍNCULO DE YOUTUBE LOS SEPARO EN PARTES CON SUS VÍNCULOS
+  function separoLinksYoutube(){
+    var vinculosYoutube = datosEvento.LinkYoutube.split(";");
+    if (vinculosYoutube.length > 1) {
+      datosEvento.LinkYoutube = "";
+      vinculosYoutube.forEach( function(valor, indice, array) {
+        datosEvento.LinkYoutube += "<P><font size='3' color=\"black\"><strong> Parte " + (indice+1) + ": </strong></font><a href='" + vinculosYoutube[indice] + "'>" + vinculosYoutube[indice] + "</a></p>";
+      });
+    } else{
+      datosEvento.LinkYoutube = "<a href='" + datosEvento.LinkYoutube + "'>" + datosEvento.LinkYoutube + "</a>";
+    }
+  }
+}
+
+/*************************************************************
+*** ARMA LOS DATOS DE PAGO SEGÚN TK                        ***
+*** SI TIENE EL EVENTO INCLIÚDO LE CONFIRMA LA INSCRIPCIÓN ***
+*** Y LE MUESTRA LOS LINKS DE YOUTUBE                      ***
+*************************************************************/
+function ArmoPago(datosEvento, datosMail){
+  if (datosEvento['aPagar'] > 0 ){
+    datosEvento['TextoInicial'] = datosMail['TextoInicial'];
+    var LineaPago1 = "<br/><font size='3' color=\"black\"><strong>El valor del evento: " + datosEvento.Moneda + datosEvento['aPagar'] + "</strong></font>";
+    var LineaPago2 = "<br/><a href='"+ datosEvento.botonPago +
+    "'><img src='http://meditarenargentina.org/wp-content/uploads/2019/02/Sin-título-1.png' height='50' width='150'></a>"
+    datosEvento['LineasDePago'] = LineaPago1 + LineaPago2;
+    datosEvento.subject = "¿Confirmaste tu inscripción a " + datosEvento.Asunto + "?";
+    datosEvento.pagoTransfer = datosMail.PagoTransfer;
+    datosEvento.TextoLink = "";
+    datosEvento.AvisoOnline = "";
+    datosEvento.LinkYoutube = "";
+  } else {
+      datosEvento['TextoInicial'] = datosMail['TextoInicialConfirmado'];
+      datosEvento['LineasDePago'] =  "";
+      datosEvento.subject = datosEvento.Asunto + " - Inscripción confirmada";
+      datosEvento.pagoTransfer = "";
+  }
+return datosEvento;
+}
+/*************************************************************
+*** VERIFICA SI EL EVENTO ES TOMA DE PRECEPTOS             ***
+*** PARA INCLUIR INFO EXTRA EN EL MAIL Y NO CALCULAR COSTO ***
+*************************************************************/
+function Preceptos(datosMail, datosEvento, TituloEvento){
+    datosEvento['infoAcceso'] = datosMail.infoAccesoPreceptos;
+    datosEvento['lineas de pago'] = "";
+    datosEvento['subject'] = datosEvento.FechaEvento +" " + datosEvento.HoraEvento +" " + TituloEvento + " - " + "Inscripción confirmada";
+    datosEvento['TextoInicial'] = datosMail['TextoInicialConfirmado'];
+  return datosEvento;
+}
+
+/*************************************************************
+*** VERIFICA SI EL CLIENTE ELIGE HACER EL EVENTO ONLINE    ***
+*** O PRESENCIAL E INCLUYE INFO DE PROTOCOLO               ***
+*************************************************************/
+function verificarModalidad(ModalidadElegida, datosEvento){
+  // Verificar si la modalidad es presencial u online para cambiar el texto de infoAcceso
+  var infoAcceso = "";
+  switch (ModalidadElegida)  {
+    case "PRESENCIAL":
+      infoAcceso = "infoAccesoPresencial";
+      /*datosEvento.LinkYoutube = "";     ****QUEDA DESHABILITADO PORQUE AHORA SE ENVÍAN LOS  
+        datosEvento.TextoLink = "";           LINKS DE YOUTUBE AUNQUE ELIJA IR PRESENCIAL****
+        datosEvento.AvisoOnline = "";*/
+      datosEvento.LugarEvento = "Serrano 1316, PALERMO";
+    break;
+    case "ONLINE":
+      if (datosEvento.LinkYoutube != ""){
+      infoAcceso = "infoAccesoOnlineLINK";
+      } else {
+        if(datosEvento.Tipo == "Meditación para Niños"){
+          infoAcceso = "infoAccesoMeditacionChicos";
+          datosEvento.TextoLink = "";
+          datosEvento.AvisoOnline = "";
+        } else{
+          infoAcceso = "infoAccesoOnline";
+          datosEvento.TextoLink = "";
+          datosEvento.AvisoOnline = "";
+        }
+      }
+      datosEvento.LugarEvento = "ONLINE";
+    break; 
+    default:
+      infoAcceso = "infoAccesoOnline";
+    break;
+  }  
+  return infoAcceso;
+}
+
+/*************************************************************
+*** AHORRA CÓDIGO EN CADA FUNCIÓN DÓNDE TRAE DATOS DE      ***
+*** LA PLANILLA INFORMACIÓN DE CURSOS                      ***
+*************************************************************/
+function buscoColumna(Campo, sheet){
+      columna = sheet[0].indexOf(Campo)+1;
+      return columna;
+}
+
+/**************************************************************
+*** SI EL CLIENTE ELIGE RECIBIR INFORMACIÓN EXTRA SOBRE LOS ***
+*** BENEFICIOS DE LAS TKS SE LE ENVÍA UN MAIL ADICIONAL     ***
+**************************************************************/
+function envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail){
+  var saludoInfo = "<br/>Espero que estés muy bien.<br/><br/>Muchas gracias por tu interés en nuestras actividades.<br/>";
+  var flagTK = false;
+  var flagAbono = false;
+      switch (infoTKAbono)  {
+      case 'TARJETA KADAMPA':
+        subject = "Información solicitada sobre Tarjetas Kadampa";
+        var LineaInscripcionAbono = "";
+        var LineaInscripcionTK = datosMail.envioInfoTK;
+        envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, LineaInscripcionAbono, mail, subject);
+        flagTK = true;
+      break;
+      case 'ABONO MENSUAL':
+        subject = "Información solicitada sobre Abono mensual";
+        var LineaInscripcionAbono = datosMail.Abono + "<br/><font size='3' color=\"black\"><strong>SU VALOR ES DE $" + datosMail.ValorAbono + 
+          " y podés contratarlo aquí: </strong></font>" + "<br/><a href='"+ datosMail.botonPagoAbono + "'>INSCRIPCIÓN AL ABONO</a>";
+        var LineaInscripcionTK = "";
+        envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, LineaInscripcionAbono, mail, subject);
+          flagAbono = true;
+      break; 
+      case 'TARJETA KADAMPA, ABONO MENSUAL':
+        subject = "Información solicitada sobre Tarjetas Kadampa y Abono mensual";
+        var LineaInscripcionAbono = datosMail.Abono + "<br/><font size='3' color=\"black\"><strong>SU VALOR ES DE $" + datosMail.ValorAbono + 
+          " y podés contratarlo aquí: </strong></font>" + "<br/><a href='"+ datosMail.botonPagoAbono + "'>INSCRIPCIÓN AL ABONO</a>";
+        var LineaInscripcionTK = datosMail.envioInfoTK;
+        envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, LineaInscripcionAbono, mail, subject);
+        flagTK = true;
+        flagAbono = true;
+      break; 
+      default:
+        break;
+    }  
+    function envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, LineaInscripcionAbono, mail, subject){
+      var emailBody ="";
+      var htmlBody =  "¡Hola <font color=\"green\"><strong>" + Nombre + " " + Apellido + "</strong></font>" + "!" + saludoInfo +
+      LineaInscripcionTK + LineaInscripcionAbono + datosMail.Saludo;
+      var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+      MailApp.sendEmail(mail, subject, emailBody, advancedOpts);
+    }
+
+  if (flagTK){
+    colTemporal = sheet[0].indexOf('Envio Info TK')+1;  
+    ActiveSheet.getRange(ActiveRow, colTemporal).setValue("INFOTK ENVIADA").setBackground('green').setFontColor('white');
+  }
+  if (flagAbono) {
+    colTemporal = sheet[0].indexOf('Envio Info Abono')+1;
+    ActiveSheet.getRange(ActiveRow, colTemporal).setValue("INFOABONO ENVIADA").setBackground('green').setFontColor('white');
+  }
+}
+
+
+/**************************************************************
+*** AGREGAR EL SIGUIENTE BLOQUE DE CÓDIGO EN EL APPS SCRIPT ***
+*** DE CADA FORMULARIO NUEVO DENTRO DE SU SHEET ASOCIADA ******
+***                 INICIO DE CÓDIGO                        ***
+*** var TituloEvento = "Introducción al tantra";            ***
+*** function onOpen(e) {BibRespuestaAuto.formateoPlanilla();} *
+*** function emailOnFormSubmit(e) {                         ***
+*** BibRespuestaAuto.procesoRespuestas(e, TituloEvento);    ***
+***                   FIN DE CÓDIGO                         ***
+*** IMPORTANTE: Cambiar sólo el título del evento           ***
+*** Ejemplo: var TituloEvento = "Karma y Vacuidad";         ***
+**************************************************************/
