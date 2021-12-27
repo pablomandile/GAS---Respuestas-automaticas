@@ -359,7 +359,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
     if (vinculosYoutube.length > 1) {
       datosEvento.LinkYoutube = "";
       vinculosYoutube.forEach( function(valor, indice, array) {
-        datosEvento.LinkYoutube += "<P><font size='3' color=\"black\"><strong> Parte " + (indice+1) + ": </strong></font><a href='" + vinculosYoutube[indice] + "'>" + vinculosYoutube[indice] + "</a></p>";
+      datosEvento.LinkYoutube += "<P><font size='3' color=\"black\"><strong> Parte " + (indice+1) + ": </strong></font><a href='" + vinculosYoutube[indice] + "'>" + vinculosYoutube[indice] + "</a></p>";
       });
     } else{
       datosEvento.LinkYoutube = "<a href='" + datosEvento.LinkYoutube + "'>" + datosEvento.LinkYoutube + "</a>";
