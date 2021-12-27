@@ -439,7 +439,7 @@ function ArmoPago(datosEvento, datosMail){
     datosEvento['TextoInicial'] = datosMail['TextoInicial'];
     var LineaPago1 = "<br/><font size='3' color=\"black\"><strong>El valor del evento: " + datosEvento.Moneda + datosEvento['aPagar'] + "</strong></font>";
     var LineaPago2 = "<br/><a href='"+ datosEvento.botonPago +
-    "'><img src='http://meditarenargentina.org/wp-content/uploads/2019/02/Sin-título-1.png' height='50' width='150'></a>"
+    "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
     datosEvento['LineasDePago'] = LineaPago1 + LineaPago2;
     datosEvento.subject = "¿Confirmaste tu inscripción a " + datosEvento.Asunto + "?";
     datosEvento.pagoTransfer = datosMail.PagoTransfer;
