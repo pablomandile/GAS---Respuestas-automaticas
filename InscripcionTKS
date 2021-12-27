@@ -1,0 +1,113 @@
+function emailOnFormSubmit(e) {
+  var fechaHoy = new Date();
+  var dia = fechaHoy.getDate();
+  var tkBenefactor = 2200;
+  var tkCorazon = 1800;
+  var tkClases1 = 1200;
+  var tkClases2 = 900;
+  var tkClases3 = 600;
+  var btPagoTkClases = "";
+  var tkClasesAPagar = 0;
+  var btTkClases1 = "https://bit.ly/3srJYSr";
+  var btTkClases2 = "https://bit.ly/3gaXIfc";
+  var btTkClases3 = "https://bit.ly/37OxpqK";
+  var btTkCorazon = "https://bit.ly/3srJYSr";
+  var btTkBenefactor = "https://bit.ly/3srJYSr";
+  var aPagar = 0;
+  var btPago = '';
+  var valTarjeta = 0;
+  var subject = "Inscripción a la ";
+  var activeSheet = SpreadsheetApp.getActiveSheet();
+  var activeRow = activeSheet.getLastRow();
+  var sheet = activeSheet.getDataRange().getValues();
+    colTemporal = sheet[0].indexOf('Nombre')+1;  
+  var nombre = activeSheet.getRange(activeRow, colTemporal).getValue();
+    colTemporal = sheet[0].indexOf('Apellido')+1;  
+  var apellido = activeSheet.getRange(activeRow, colTemporal).getValue();
+      colTemporal = sheet[0].indexOf('Dirección de correo electrónico')+1;  
+  var mail = activeSheet.getRange(activeRow, colTemporal).getValue();
+    colTemporal = sheet[0].indexOf('¿EN CUÁL DE ELLAS TE GUSTARÍA INSCRIBIRTE?')+1;  
+  var eleccionTk = activeSheet.getRange(activeRow, colTemporal).getValue();
+  var textoTK = "";
+
+  switch (eleccionTk)  {
+    case 'TARJETA KADAMPA CLASES':
+        if (dia >= 1 && dia < 11){
+        tkClasesAPagar = tkClases1;
+        btPagoTkClases = btTkClases1;
+        } else if (dia > 10 && dia < 21){
+          tkClasesAPagar = tkClases2;
+          btPagoTkClases = btTkClases2;
+        } else if (dia > 20 && dia <= 31){
+          tkClasesAPagar = tkClases3;
+          btPagoTkClases = btTkClases3;
+        }
+        valTarjeta = tkClases1;
+        aPagar = tkClasesAPagar;
+        btPago = btPagoTkClases;
+        textoTK = ", pero <br>" +
+        "también podés sumarte en cualquier otro momento abonando un valor proporcional. <br>" +
+        "Aquí te compartimos la escala de precios que varían según la fecha en la cual realices el pago:</p>" +
+        "<p>- Si abonas del 01 al 10: El valor es $1200 <br>" +
+        "- Si abonas del 11 al 20: El valor es $900 <br>" +
+        "- Si abonas del 21 al 30: El valor es $600</p> <br>";
+    break;
+    case 'TARJETA KADAMPA CORAZÓN':
+        aPagar = tkCorazon;
+        btPago = btTkCorazon;
+        valTarjeta = tkCorazon;
+        textoTK = ".<br>";
+    break; 
+    case 'TARJETA KADAMPA BENEFACTOR':
+        aPagar = tkBenefactor;
+        btPago = btTkBenefactor;
+        valTarjeta = tkBenefactor;
+        textoTK = ".<br>";
+    break; 
+    default:
+      aPagar = 0
+    break;
+  }  
+  subject = subject + eleccionTk;
+  var lineaPago1 = "<br/><font size='3' color=\"black\"><strong>👉 PODÉS ABONAR CON TARJETA DE DÉBITO/CRÉDITO: </strong></font>";
+  var lineaPago2 = "<br/><a href='"+ btPago + "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png'" +
+                    "height='59' width='319'></a>";
+  
+  // emailBody is for those devices that can't render HTML, is plain text
+  var emailBody = "¡Hola! " + "\nGracias por tu inscripción la tarjeta Kadampa. "+
+    "\nPróximamente recibirás un email con más detalles y tu información de pago." + "\nMuchas Gracias";
+  var htmlBody =  "<font size = '3' color=\"black\">¡Hola " + "<font color=\"black\"><strong>" + 
+  nombre + " " + apellido + "</strong></font>" + "!</ font>" +
+  "<p>Muchas gracias por inscribirte a la tarjeta Kadampa! ☺️💞</p>" +
+  "<p>Te contamos que el valor de la " + eleccionTk + " es de $" + valTarjeta + " abonando del 1 al 10" + textoTK +
+  "<br><font size='3' color=\"black\">Tu importe a abonar es: $" + aPagar + "</font>" + lineaPago1 + lineaPago2 +
+  "<p>También tenés la opción de abonar con Transferencia Bancaria, aquí te dejamos nuestros datos.</p>"+
+  "<section>Nombre: CENTRO DE MEDITACIÓN KADAMPA ARGENTINA <br>"+
+  "Banco Santander Río Cuenta Corriente en Pesos <br>"+
+  "935/9 Sucursal: 395 <br>"+
+  "CUIT 30-71440026-2 <br>"+
+  "CBU: 0720395 2 20000000093590 <br>"+
+  "ALIAS: JABON.ACEITE.POTRO <br>"+
+  "Por favor enviar el comprobante</section>"+
+  "<p>Para agilizar la registración de tu pago, te pedimos que nos ayudes enviándonos" +
+  "una foto del comprobante de pago por mail. <br>"+
+  "¡¡Muchas gracias!!</p>"+
+  "<p>Cuando recibamos el comprobante de pago, te contactamos para enviarte la información " +
+  "necesaria para que puedas acceder a la transmisión online de las actividades. </p>"+
+  "<p>¡ESTAMOS MUY FELICES QUE TE HAYAS SUMADO A LAS ACTIVIDADES"+
+  "DE NUESTRO CENTRO DE MEDITACION KADAMPA! </p>"+
+  "<p>Esperamos que lo disfrutes, te envío un cálido saludo.</p>"
+
+  // More info for Advanced Options Parameters 
+  // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
+  var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+  MailApp.sendEmail(mail, subject, emailBody, advancedOpts);
+  
+  // Actualiza los campos en la planilla de cálculo del evento
+  activeSheet.getRange(activeRow, 12).setValue("CORREO ENVIADO");
+  activeSheet.getRange(activeRow, 11).setValue('$' + aPagar);
+  activeSheet.getRange(activeRow, 1).setBackground('#b3d1ff');
+  activeSheet.getRange(activeRow, 12).setBackground('green');
+  activeSheet.getRange(activeRow, 12).setFontColor('white');
+  SpreadsheetApp.flush();
+}
