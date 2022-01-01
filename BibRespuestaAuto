@@ -284,9 +284,9 @@ function buscaCurso(TituloEvento, Pais){
         BotonPagoDolSinDesc:BotonPagoDolSinDesc,
         infoPrograma:infoPrograma,
         LinkYoutube:valorPlanilla('LinkYoutube'),
-        TextoLink:"<br><strong>LINK DE ACCESO: </strong>",
+        TextoLink:"<strong>LINK DE ACCESO: </strong>",
         AvisoOnline:"<br><br><strong>La clase se activará el " + 
-                    valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong>",
+                    valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong><br>",
         Moneda:"$"
       };
     return infCurso;
@@ -310,7 +310,8 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
   var styleF18 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#3c4043'>";
   var styleF18Blue = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#4575ec'>";
   var styleF22Tab = "<span style='margin-left:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#3c4043'>";
-   var finStyle = "</span>";
+  var styleF22Morado = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#a66cf5'>";
+  var finStyle = "</span>";
   
     // emailBody is for those devices that can't render HTML, is plain text
   var emailBody = "¡Hola! " + "\nGracias por tu inscripción al Curso " + TituloEvento + "\nen fecha " +
@@ -329,7 +330,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
             "<area shape='rect' coords='618,01,720,70' href='https://meditarenargentina.org/' alt='web Centro de meditación KadampaArgentina' target='_blank'>"+
             "</map></td></tr><tr bgcolor='#fff'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-720x253-1.png' width='720' style='display:block' alt='Banner Header'>"+
             "</td></tr><tr><td valign='middle' style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
-  var inicioPieMail = "</td></tr><tr height='100' bgcolor='#4575ec'><td align='center' valign='middle' style='padding:5px 18px 5px 18px;'>" + styleF28White + datosMail.Saludo + finStyle ;
+  var inicioPieMail = "</td></tr><tr height='150px' bgcolor='#4575ec'><td align='center' valign='middle' style='padding:0px 18px 40px 18px;'>" + styleF28White + datosMail.Saludo + finStyle ;
   var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
 
   var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong>" + finStyle +
@@ -343,8 +344,9 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
   separoLinksYoutube();
 
   var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
-    DatosEvento + datosEvento.infoPrograma + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
-    datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + finPieMail;
+    DatosEvento + datosEvento.infoPrograma + styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + datosEvento.TextoLink + finStyle + 
+    styleF18Blue + datosEvento.LinkYoutube + finStyle + styleF22Morado + datosEvento.AvisoOnline + finStyle +
+    styleF18 + datosMail.Dudas + finStyle + inicioPieMail + finPieMail;
 
   // More info for Advanced Options Parameters 
   // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
