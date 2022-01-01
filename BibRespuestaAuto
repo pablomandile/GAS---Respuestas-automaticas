@@ -12,16 +12,15 @@ function formateoPlanilla(){
   var ActiveCol = ActiveSheet.getLastColumn();
   var sheet = ActiveSheet.getDataRange().getValues();
   var colTemporal = "";
-  colTemporal = sheet[0].indexOf('Envio Info Abono')+1;  
+  colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
   if (colTemporal == 0){
     ActiveSheet.insertColumnAfter(ActiveCol);
     ActiveSheet.getRange(1, ActiveCol+1).setValue('Pendiente');
     ActiveSheet.insertColumnAfter(ActiveCol+1);
     ActiveSheet.getRange(1, ActiveCol+2).setValue('Envio Info');
     ActiveSheet.insertColumnAfter(ActiveCol+2);
-    ActiveSheet.getRange(1, ActiveCol+3).setValue('Envio Info TK');
-    ActiveSheet.insertColumnAfter(ActiveCol+3);
-    ActiveSheet.getRange(1, ActiveCol+4).setValue('Envio Info Abono');
+    ActiveSheet.getRange(1, ActiveCol+3).setValue('Envio Info TKS');
+
     var MaxCols = ActiveSheet.getMaxColumns();
     for (var i = 0; i < MaxCols; i++){
       ActiveSheet.getRange(1, i+1).setBackground('#CFE2F3');
@@ -45,49 +44,35 @@ function procesoRespuestas(e, TituloEvento){
     var ActiveSheet = SpreadsheetApp.getActiveSheet();
     var ActiveRow = ActiveSheet.getLastRow();
     var sheet = ActiveSheet.getDataRange().getValues();
-    var flagtkab = true;
-    var flagtipoTk = true;
-    var flagtarjetasyab = true;
     var Preguntas = {
-              infoTKAB : '¿Te gustaría información de cómo obtener la Tarjeta Kadampa o Abono Mensual?',
+              infoTKAB : '¿TE GUSTARÍA RECIBIR MÁS INFORMACIÓN PARA OBTENER TU TARJETA KADAMPA?',
               pais : '¿De qué país eres?',
               modalidad : '¿Bajo que modalidad vas a participar de la clase?',
               nombre : 'Nombre',
               nombreAdulto : 'Nombre y apellido del Adulto que acompañara al niñ@',
               apellido : 'Apellido',
-              mail : 'Dirección de correo electrónico (e-mail)',
-              tkoabono : '¿Tenés ABONO MENSUAL o TARJETA KADAMPA?',
-              tipodetk : '¿Tenés Tarjeta Kadampa?',
+              mail : 'Dirección de correo electrónico',
               invitadoNombre : 'NOMBRE Y APELLIDO DEL INVITADO/A',
-              tarjetasyabono: '¿Tenés ABONO MENSUAL o alguna de nuestras TARJETAS KADAMPAS?',
+              tarjetasyabono: '¿TENÉS ALGUNA DE NUESTRAS TARJETAS KADAMPAS?',
               invitadoMail : 'Dirección de correo electrónico INVITADO/A'
     }
-  
     var infoTKAbono = (buscoColumna(Preguntas.infoTKAB,sheet) != 0) ? valorPlanilla(Preguntas.infoTKAB) : "";
-    
     var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "ARGENTINA";
-
     var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "ONLINE";
-
     var Nombre = (buscoColumna(Preguntas.nombre,sheet) != 0) ? valorPlanilla(Preguntas.nombre) : "";
     if (Nombre == "") {
       Nombre = (buscoColumna(Preguntas.nombreAdulto,sheet) != 0) ? valorPlanilla(Preguntas.nombreAdulto) : "";
-    }
+    };
     var Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
-   
     var mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
-   
-    var TKAbono = (buscoColumna(Preguntas.tkoabono,sheet) != 0) ? valorPlanilla(Preguntas.tkoabono) : "VALOR UNICO";
-    if (buscoColumna(Preguntas.tkoabono,sheet) != 0){flagtipoTk = false; flagtarjetasyab = false;} 
-
-    var TipoTK = (buscoColumna(Preguntas.tipodetk,sheet) != 0) ? valorPlanilla(Preguntas.tipodetk) : "VALOR UNICO";
-    if (buscoColumna(Preguntas.tipodetk,sheet) != 0){flagtkab = false; flagtarjetasyab = false;} 
-  
     var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
-    if (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0){flagtkab = false; flagtipoTk = false ;} 
 
+    /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
+       DESDE LA HOJA CRSOS Y MAILINFO */
     var datosEvento = buscaCurso(TituloEvento, Pais);
     var datosMail = CargoDatosMail();    
+    /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
+       DESDE LA HOJA CRSOS Y MAILINFO */
 
     if (datosEvento.Tipo == "Clase día del Amigo 2x1"){
       var claseInvitacion = {
@@ -103,87 +88,40 @@ function procesoRespuestas(e, TituloEvento){
       }
     }
 
-  // Verificar la inscripción, cuánto debe abonar dependiendo si tiene tk o abono
-  if (flagtkab){
-    switch (TKAbono)  {
-      case 'ABONO MENSUAL':
-        datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoAbono;
-        break;
-      case 'TARJETA KADAMPA':
-        datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
-        break; 
-      case 'NINGUNO DE LOS ANTERIORES':
-        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-        datosEvento.aPagar = datosEvento.ValorEvento;
-      case 'VALOR UNICO':
-        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-        datosEvento.aPagar = datosEvento.ValorEvento;
-        flagtipoTk = false;
-        flagtarjetasyab = false;
-        break; 
-      default:
-        break;
-    }  
-  }
-  if (flagtipoTk){
-      // Verificar la inscripción, cuánto debe abonar dependiendo de que TK tiene
-    switch (TipoTK)  {
-      case 'SI, tengo: TARJETA KADAMPA CORAZÓN':
-        datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
-        break;
-      case 'SI, tengo: TARJETA KADAMPA BENEFACTOR':
-        datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
-        break; 
-      case 'NINGUNO DE LOS ANTERIORES':
-        datosEvento.aPagar = datosEvento.ValorEvento;
-        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-      case 'VALOR UNICO':
-        datosEvento.aPagar = datosEvento.ValorEvento;
-        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-        flagtarjetasyab = false;
-        break; 
-      default:
-        break;
-    }  
-  }
-    if (flagtarjetasyab){
-    switch (TipoTKyAbono)  {
-      case 'ABONO MENSUAL':
-        datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoAbono;
-        break;
-      case 'TARJETA KADAMPA CORAZÓN':
-        datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
-        break; 
-      case 'TARJETA KADAMPA BENEFACTOR':
-        datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
-        break; 
-      case 'NINGUNO DE LOS ANTERIORES':
-        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-        datosEvento.aPagar = datosEvento.ValorEvento;
-      case 'VALOR UNICO':
-        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-        datosEvento.aPagar = datosEvento.ValorEvento;
-        break; 
-      default:
-        break;
-    }  
-  }
+  switch (TipoTKyAbono)  {
+    case 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)':
+      datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
+      datosEvento.botonPago = datosEvento.BotondePagoAbono;
+      break;
+    case 'SI, TENGO LA TK CORAZÓN':
+      datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
+      datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
+      console.log(datosEvento.aPagar);
+      break; 
+    case 'SI, TENGO LA TK BENEFACTOR':
+      datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
+      datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
+      break; 
+    case 'NINGUNA DE LAS ANTERIORES':
+      datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+      datosEvento.aPagar = datosEvento.ValorEvento;
+    case 'VALOR UNICO':
+      datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+      datosEvento.aPagar = datosEvento.ValorEvento;
+      break; 
+    default:
+      break;
+  }  
   
   datosEvento = ArmoPago(datosEvento, datosMail);
   datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
   if (datosEvento.Tipo == "Preceptos"){
     datosEvento = Preceptos(datosMail, datosEvento, TituloEvento);
   }
+
   ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet);
 
-  if (infoTKAbono != ""){
+  if (infoTKAbono == "SI, me gustaría!"){
     envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
   }
 
@@ -233,7 +171,7 @@ function desactivarFormenFecha(i, infoFechaCierre){
 /*************************************************************
 *** TRAE TODOS LOS DATOS PARA CONFORMAR EL EMAIL DE        ***
 *** RESPUESTA DESDE LA PLANILLA INFORMACIÓN DE CURSOS /    ***
-*** MAILINFO                                               ***
+*** MAILINFO MÁS LO PROCESADO EN PROCESO RESPUESTAS        ***
 *************************************************************/
 function CargoDatosMail(){
   var ss = SpreadsheetApp.openById("1zVvWhDAfTVPZUkXxnb5qntpkRSWTDT8KoSF7QZYlRwE");
@@ -347,8 +285,8 @@ function buscaCurso(TituloEvento, Pais){
         infoPrograma:infoPrograma,
         LinkYoutube:valorPlanilla('LinkYoutube'),
         TextoLink:"<br><strong>LINK DE ACCESO: </strong>",
-        AvisoOnline:"<br><br><font size='2' color=\"red\"><strong>La clase se activará el " + 
-                    valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong></font>",
+        AvisoOnline:"<br><br><strong>La clase se activará el " + 
+                    valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong>",
         Moneda:"$"
       };
     return infCurso;
@@ -366,36 +304,47 @@ function buscaCurso(TituloEvento, Pais){
 *** CALCÚLA SI HAY INVITADOS Y LES ENVÍA OTRO MAIL         ***
 *************************************************************/
 function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet){
-  // Armado de información del evento
-  var encabezadoMail = "<table width='600' border='0' align='center' bgcolor='#e6f1fa' cellpadding='0' cellspacing='0'>"+
-        "<tr><td><img src='https://meditarenargentina.org/mailKadampa/header.png' alt='Social Media' width='600' height='60' usemap='#m_-6367196319079066917_Redes' title='CMKA Social' border='0' style='display:block'>"+
-            "<map name='m_-6367196319079066917_Redes' id='m_-6367196319079066917Redes'>"+
-            "<area shape='rect' coords='15,14,40,40' href='https://www.facebook.com/meditarenargentina' alt='Facebook CMKA' target='_blank'>"+
-            "<area shape='rect' coords='50,14,80,40' href='https://twitter.com/meditarenarg' alt='Twitter CMKA' target='_blank'>"+
-            "<area shape='rect' coords='85,14,110,40' href='https://www.instagram.com/meditarenargentina/' alt='Instagram CMKA' target='_blank'>"+
-            "<area shape='rect' coords='120,14,150,40' href='https://www.youtube.com/channel/UC8Bmrclk97g2onCsWRwZCyw' alt='Youtube CMKA' target='_blank'>"+
-            "<area shape='rect' coords='385,14,590,36' href='https://meditarenargentina.org/' alt='WEB CMKA' target='_blank'>"+
-            "</map></td></tr><tr bgcolor='#fff'><td><img src='https://meditarenargentina.org/mailKadampa/head.png' width='600' style='display:block' alt='Reiteración de pedido'>"+
-            "</td></tr><tr><td valign='middle' style='padding:30px 28px;font-family:Arial,Helvetica,sans-serif;font-size:10pt;line-height:20px'>";
-  var inicioPieMail = "</td></tr><tr height='100' bgcolor='#2784d6'><td valign='middle' style='padding:5px 18px;font-family:Arial,Helvetica,sans-serif;font-size:10pt;line-height:20px'>";
-  var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
-
-  var DatosEvento = "<br/><font size='3' color=\"black\"><strong>DETALLES DEL EVENTO: </strong></font>" + "<br/>Nombre del evento: " + 
-    "<font color='#369bd1'><strong>" + TituloEvento + "</strong></font>" + "<br/>Fecha y hora: " + "<font color=\"black\">" + 
-    datosEvento.FechaEvento + " " + datosEvento.HoraEvento + "</font>" + "<br/>Disponible por: " + 
-    "<font color=\"black\">" + datosEvento.Disponibilidad + "</font>" + "<br/>Lugar: <strong>" + 
-    datosEvento.LugarEvento + "</strong>";
-  // emailBody is for those devices that can't render HTML, is plain text
+  var styleF28 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
+  var styleF28White = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#ffffff'>";
+  var styleF22 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#3c4043'>";
+  var styleF18 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#3c4043'>";
+  var styleF18Blue = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#4575ec'>";
+  var styleF22Tab = "<span style='margin-left:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#3c4043'>";
+   var finStyle = "</span>";
+  
+    // emailBody is for those devices that can't render HTML, is plain text
   var emailBody = "¡Hola! " + "\nGracias por tu inscripción al Curso " + TituloEvento + "\nen fecha " +
         "\nPróximamente recibirás un email con más detalles sobre éste evento y tu información de pago." + "\nMuchas Gracias";
   
-  separoLinksYoutube();
+  // Armado de información del evento
+  var encabezadoMail = "<table width='720' border='0' align='center' bgcolor='white' cellpadding='0' cellspacing='0'>"+
+        "<tr bgcolor='#2784d6'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-Social4.png' alt='Social Media' width='720' usemap='#m_-6367196319079066917_Redes' title='CMKA Social' border='0' style='display:block'>"+
+            "<map name='m_-6367196319079066917_Redes' id='m_-6367196319079066917Redes'>"+
+            "<area shape='rect' coords='01,01,90,70'  href='https://www.facebook.com/meditarenargentina' alt='Facebook CMKA' target='_blank'>"+
+            "<area shape='rect' coords='92,01,188,70' href='https://www.instagram.com/meditarenargentina/' alt='Instagram CMKA' target='_blank'>"+
+            "<area shape='rect' coords='190,01,303,70' href='https://www.youtube.com/channel/UC8Bmrclk97g2onCsWRwZCyw' alt='Youtube CMKA' target='_blank'>"+
+            "<area shape='rect' coords='306,01,410,70' href='https://open.spotify.com/artist/0SKgzlnrfGPaeQfUUgDhb7/discography/album' alt='Spotify' target='_blank'>"+
+            "<area shape='rect' coords='412,01,512,70' href='https://api.whatsapp.com/send?phone=541161495976' alt='Whatsapp' target='_blank'>"+
+            "<area shape='rect' coords='515,01,616,70' href='https://twitter.com/meditarenarg' alt='Twitter CMKA' target='_blank'>"+
+            "<area shape='rect' coords='618,01,720,70' href='https://meditarenargentina.org/' alt='web Centro de meditación KadampaArgentina' target='_blank'>"+
+            "</map></td></tr><tr bgcolor='#fff'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-720x253-1.png' width='720' style='display:block' alt='Banner Header'>"+
+            "</td></tr><tr><td valign='middle' style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
+  var inicioPieMail = "</td></tr><tr height='100' bgcolor='#4575ec'><td align='center' valign='middle' style='padding:5px 18px 5px 18px;'>" + styleF28White + datosMail.Saludo + finStyle ;
+  var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
+
+  var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong>" + finStyle +
+    styleF18 + "<br/>Nombre del evento: " + finStyle + styleF18Blue + "<strong>" + TituloEvento + "</strong>" + finStyle +
+    styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
+    styleF18 + "<br/>Disponible por: " + datosEvento.Disponibilidad + finStyle +
+    styleF18 + "<br/>Lugar: " + finStyle + styleF18Blue + "<strong>" + datosEvento.LugarEvento + "</strong>" + finStyle;
   
-  var htmlBody =  encabezadoMail + "<font size = '3' color=\"black\">¡Hola " + "<font color=\"black\"><strong>" + Nombre + " " + Apellido + 
-    "</strong></font>" + "!</font>" + datosEvento.TextoInicial + datosEvento.LineasDePago +  
-    "<br/><br/><font size='3' color=\"black\"><strong>INFORMACIÓN IMPORTANTE: </strong></font><br/>" +
+  var saludoInicial = styleF28 + "¡Hola " + '<strong>' + Nombre + " " + Apellido + "</strong>!" + finStyle;
+  
+  separoLinksYoutube();
+
+  var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
     DatosEvento + datosEvento.infoPrograma + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
-    datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + datosMail.Saludo + finPieMail;
+    datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + finPieMail;
 
   // More info for Advanced Options Parameters 
   // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
@@ -404,10 +353,10 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
 
   if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
     console.log(claseInvitacion.invitadoMail);
-    var htmlBodyinvitado =  encabezadoMail + "<font size = '3' color=\"black\">¡Hola " + "<font color=\"black\"><strong>" +
-    claseInvitacion.invitadoNombre + "</strong></font>" + "!</font>" + "<br/><br/><font size = '3' color=\"black\">Te contamos que " 
-    + Nombre + " " + Apellido + " te invitó a una clase de meditación <br/>" + " por el día del amigo! <br/></font>" +    
-    "<br/><br/><font size='3' color=\"black\"><strong>INFORMACIÓN IMPORTANTE: </strong></font><br/>" +
+    var htmlBodyinvitado =  encabezadoMail + "¡Hola " + "<strong>" +
+    claseInvitacion.invitadoNombre + "</strong>" + "!" + "<br/><br/>Te contamos que " 
+    + Nombre + " " + Apellido + " te invitó a una clase de meditación <br/>" + " por el día del amigo! <br/>" +    
+    "<br/><br/><strong>INFORMACIÓN IMPORTANTE: </strong><br/>" +
     DatosEvento + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
     datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + datosMail.Saludo + finPieMail;
     var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBodyinvitado};
@@ -421,7 +370,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
     if (vinculosYoutube.length > 1) {
       datosEvento.LinkYoutube = "";
       vinculosYoutube.forEach( function(valor, indice, array) {
-        datosEvento.LinkYoutube += "<P><font size='3' color=\"black\"><strong> Parte " + (indice+1) + ": </strong></font><a href='" + vinculosYoutube[indice] + "'>" + vinculosYoutube[indice] + "</a></p>";
+      datosEvento.LinkYoutube += "<P><strong> Parte " + (indice+1) + ": </strong><a href='" + vinculosYoutube[indice] + "'>" + vinculosYoutube[indice] + "</a></p>";
       });
     } else{
       datosEvento.LinkYoutube = "<a href='" + datosEvento.LinkYoutube + "'>" + datosEvento.LinkYoutube + "</a>";
@@ -437,8 +386,8 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
 function ArmoPago(datosEvento, datosMail){
   if (datosEvento['aPagar'] > 0 ){
     datosEvento['TextoInicial'] = datosMail['TextoInicial'];
-    var LineaPago1 = "<br/><font size='3' color=\"black\"><strong>El valor del evento: " + datosEvento.Moneda + datosEvento['aPagar'] + "</strong></font>";
-    var LineaPago2 = "<br/><a href='"+ datosEvento.botonPago +
+    var LineaPago1 = "<br><strong>El valor del evento: " + datosEvento.Moneda + datosEvento['aPagar'] + "</strong>";
+    var LineaPago2 = "<br><a href='"+ datosEvento.botonPago +
     "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
     datosEvento['LineasDePago'] = LineaPago1 + LineaPago2;
     datosEvento.subject = "¿Confirmaste tu inscripción a " + datosEvento.Asunto + "?";
@@ -467,7 +416,7 @@ function Preceptos(datosMail, datosEvento, TituloEvento){
 }
 
 /*************************************************************
-*** VERIFICA SI EL CLIENTE ELIGE HACER EL EVENTO ONLINE    ***
+*** VERIFICA LA MODALIDAD ELEGIDA DEL EVENTO: ONLINE       ***
 *** O PRESENCIAL E INCLUYE INFO DE PROTOCOLO               ***
 *************************************************************/
 function verificarModalidad(ModalidadElegida, datosEvento){
@@ -518,53 +467,21 @@ function buscoColumna(Campo, sheet){
 *** BENEFICIOS DE LAS TKS SE LE ENVÍA UN MAIL ADICIONAL     ***
 **************************************************************/
 function envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail){
-  var saludoInfo = "<br/>Espero que estés muy bien.<br/><br/>Muchas gracias por tu interés en nuestras actividades.<br/>";
-  var flagTK = false;
-  var flagAbono = false;
-      switch (infoTKAbono)  {
-      case 'TARJETA KADAMPA':
-        subject = "Información solicitada sobre Tarjetas Kadampa";
-        var LineaInscripcionAbono = "";
-        var LineaInscripcionTK = datosMail.envioInfoTK;
-        envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, LineaInscripcionAbono, mail, subject);
-        flagTK = true;
-      break;
-      case 'ABONO MENSUAL':
-        subject = "Información solicitada sobre Abono mensual";
-        var LineaInscripcionAbono = datosMail.Abono + "<br/><font size='3' color=\"black\"><strong>SU VALOR ES DE $" + datosMail.ValorAbono + 
-          " y podés contratarlo aquí: </strong></font>" + "<br/><a href='"+ datosMail.botonPagoAbono + "'>INSCRIPCIÓN AL ABONO</a>";
-        var LineaInscripcionTK = "";
-        envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, LineaInscripcionAbono, mail, subject);
-          flagAbono = true;
-      break; 
-      case 'TARJETA KADAMPA, ABONO MENSUAL':
-        subject = "Información solicitada sobre Tarjetas Kadampa y Abono mensual";
-        var LineaInscripcionAbono = datosMail.Abono + "<br/><font size='3' color=\"black\"><strong>SU VALOR ES DE $" + datosMail.ValorAbono + 
-          " y podés contratarlo aquí: </strong></font>" + "<br/><a href='"+ datosMail.botonPagoAbono + "'>INSCRIPCIÓN AL ABONO</a>";
-        var LineaInscripcionTK = datosMail.envioInfoTK;
-        envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, LineaInscripcionAbono, mail, subject);
-        flagTK = true;
-        flagAbono = true;
-      break; 
-      default:
-        break;
-    }  
-    function envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, LineaInscripcionAbono, mail, subject){
+  var saludoInfo = "<br/>Espero que estés muy bien.<br/><br/>Muchas gracias por tu interés en nuestras actividades.<br/>";  
+  subject = "Información solicitada sobre Tarjetas Kadampa";
+  var LineaInscripcionTK = datosMail.envioInfoTK;
+  envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, mail, subject);
+
+    function envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, mail, subject){
       var emailBody ="";
       var htmlBody =  "¡Hola <font color=\"green\"><strong>" + Nombre + " " + Apellido + "</strong></font>" + "!" + saludoInfo +
-      LineaInscripcionTK + LineaInscripcionAbono + datosMail.Saludo;
-      var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+      LineaInscripcionTK + datosMail.Saludo;
+      var advancedOpts = { name: "INFORMACIÓN - CMKA", htmlBody: htmlBody};
       MailApp.sendEmail(mail, subject, emailBody, advancedOpts);
     }
 
-  if (flagTK){
-    colTemporal = sheet[0].indexOf('Envio Info TK')+1;  
-    ActiveSheet.getRange(ActiveRow, colTemporal).setValue("INFOTK ENVIADA").setBackground('green').setFontColor('white');
-  }
-  if (flagAbono) {
-    colTemporal = sheet[0].indexOf('Envio Info Abono')+1;
-    ActiveSheet.getRange(ActiveRow, colTemporal).setValue("INFOABONO ENVIADA").setBackground('green').setFontColor('white');
-  }
+    colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
+    ActiveSheet.getRange(ActiveRow, colTemporal).setValue("INFO TKS ENVIADA").setBackground('green').setFontColor('white');
 }
 
 
