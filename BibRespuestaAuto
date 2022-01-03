@@ -41,98 +41,143 @@ function formateoPlanilla(){
 *** ESCRIBE EL ESTADO EN LA PLANILLA, PENDIENTE Y ENVIOS   ***
 *************************************************************/
 function procesoRespuestas(e, TituloEvento){
-    var ActiveSheet = SpreadsheetApp.getActiveSheet();
-    var ActiveRow = ActiveSheet.getLastRow();
-    var sheet = ActiveSheet.getDataRange().getValues();
-    var Preguntas = {
-              infoTKAB : '¿TE GUSTARÍA RECIBIR MÁS INFORMACIÓN PARA OBTENER TU TARJETA KADAMPA?',
-              pais : '¿De qué país eres?',
-              modalidad : '¿Bajo que modalidad vas a participar de la clase?',
-              nombre : 'Nombre',
-              nombreAdulto : 'Nombre y apellido del Adulto que acompañara al niñ@',
-              apellido : 'Apellido',
-              mail : 'Dirección de correo electrónico',
-              invitadoNombre : 'NOMBRE Y APELLIDO DEL INVITADO/A',
-              tarjetasyabono: '¿TENÉS ALGUNA DE NUESTRAS TARJETAS KADAMPAS?',
-              invitadoMail : 'Dirección de correo electrónico INVITADO/A'
+  var ActiveSheet = SpreadsheetApp.getActiveSheet();
+  var ActiveRow = ActiveSheet.getLastRow();
+  var sheet = ActiveSheet.getDataRange().getValues();
+  var Preguntas = {
+            infoTKAB : '¿TE GUSTARÍA RECIBIR MÁS INFORMACIÓN PARA OBTENER TU TARJETA KADAMPA?',
+            pais : '¿De qué país eres?',
+            modalidad : '¿Bajo que modalidad vas a participar?',
+            nombre : 'Nombre',
+            nombreAdulto : 'Nombre y apellido del Adulto que acompañara al niñ@',
+            apellido : 'Apellido',
+            mail : 'Dirección de correo electrónico',
+            invitadoNombre : 'NOMBRE Y APELLIDO DEL INVITADO/A',
+            tarjetasyabono: '¿TENÉS ALGUNA DE NUESTRAS TARJETAS KADAMPAS?',
+            invitadoMail : 'Dirección de correo electrónico INVITADO/A',
+            eventoPorDias : 'PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',
+            diasAParticipar: 'SELECCIONA QUE DIA/S PARTICIPARÁS'
+  }
+  var infoTKAbono = (buscoColumna(Preguntas.infoTKAB,sheet) != 0) ? valorPlanilla(Preguntas.infoTKAB) : "";
+  var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "ARGENTINA";
+  var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "ONLINE";
+  var Nombre = (buscoColumna(Preguntas.nombre,sheet) != 0) ? valorPlanilla(Preguntas.nombre) : "";
+  if (Nombre == "") {
+    Nombre = (buscoColumna(Preguntas.nombreAdulto,sheet) != 0) ? valorPlanilla(Preguntas.nombreAdulto) : "";
+  };
+  var Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
+  var mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
+  var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
+  var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
+  var diasAParticipar = (buscoColumna(Preguntas.diasAParticipar,sheet) != 0) ? valorPlanilla(Preguntas.diasAParticipar) : "";
+
+  /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
+      DESDE LA HOJA CRSOS Y MAILINFO */
+  var datosEvento = buscaCurso(TituloEvento, Pais);
+  var datosMail = CargoDatosMail();    
+  /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
+      DESDE LA HOJA CRSOS Y MAILINFO */
+
+  if (datosEvento.Tipo == "Clase día del Amigo 2x1"){
+    var claseInvitacion = {
+      invitadoNombre : (buscoColumna(Preguntas.invitadoNombre,sheet) != 0) ? valorPlanilla(Preguntas.invitadoNombre) : "",
+      invitadoMail : (buscoColumna(Preguntas.invitadoMail,sheet) != 0) ? valorPlanilla(Preguntas.invitadoMail) : "",
+      invitadoSubject : "REGALO - " + datosEvento.Asunto
     }
-    var infoTKAbono = (buscoColumna(Preguntas.infoTKAB,sheet) != 0) ? valorPlanilla(Preguntas.infoTKAB) : "";
-    var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "ARGENTINA";
-    var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "ONLINE";
-    var Nombre = (buscoColumna(Preguntas.nombre,sheet) != 0) ? valorPlanilla(Preguntas.nombre) : "";
-    if (Nombre == "") {
-      Nombre = (buscoColumna(Preguntas.nombreAdulto,sheet) != 0) ? valorPlanilla(Preguntas.nombreAdulto) : "";
-    };
-    var Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
-    var mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
-    var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
-
-    /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
-       DESDE LA HOJA CRSOS Y MAILINFO */
-    var datosEvento = buscaCurso(TituloEvento, Pais);
-    var datosMail = CargoDatosMail();    
-    /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
-       DESDE LA HOJA CRSOS Y MAILINFO */
-
-    if (datosEvento.Tipo == "Clase día del Amigo 2x1"){
-      var claseInvitacion = {
-        invitadoNombre : (buscoColumna(Preguntas.invitadoNombre,sheet) != 0) ? valorPlanilla(Preguntas.invitadoNombre) : "",
-        invitadoMail : (buscoColumna(Preguntas.invitadoMail,sheet) != 0) ? valorPlanilla(Preguntas.invitadoMail) : "",
-        invitadoSubject : "REGALO - " + datosEvento.Asunto
-      }
-    } else {
-      var claseInvitacion = {
-        invitadoNombre : "",
-        invitadoMail : "",
-        invitadoSubject : ""
-      }
+  } else {
+    var claseInvitacion = {
+      invitadoNombre : "",
+      invitadoMail : "",
+      invitadoSubject : ""
     }
+  }
+  var chequeoTKS = true;
 
+  //SI ES UN RETIRO DE VARIOS DÍAS ADMITE PAGO POR DÍA
+  if (eventoPorDias != ""){
+    switch (eventoPorDias)  {
+      case 'VOY A PARTICIPAR DEL RETIRO COMPLETO':
+      break;
+      // RETIROS COMPRENDIDOS ENTRE LOS DIAS VIERNES A MARTES
+      case 'VOY A PARTICIPAR POR DIA':
+          chequeoTKS = false;
+          datosEvento.LinkYoutube = '';
+          datosEvento.diasAParticipar = diasAParticipar;
+          var diasSemana = ['VIERNES', 'SABADO', 'DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES'];
+          diasSemana.forEach(function DIASEVENTO(dia){
+            if(datosEvento.diasAParticipar.indexOf(dia) != -1){
+              linkDia = 'LinkYoutubeDia' + dia;
+              datosEvento.LinkYoutube += datosEvento[linkDia];
+              datosEvento.cantDiasElegidos += 1;
+            }
+          });
+          if (datosEvento.cantDiasElegidos == 1){
+            datosEvento.aPagar = datosEvento.Valor1Dia;
+            datosEvento.botonPago = datosEvento.BotondePago1Dia;
+            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del día " + datosEvento.diasAParticipar + "<br>";
+          } else if (datosEvento.cantDiasElegidos == 2){
+            datosEvento.aPagar = (datosEvento.Valor1Dia * 2);
+            datosEvento.botonPago = datosEvento.BotondePago2Dias;
+            var dias = "";
+            dias = diasAParticipar;
+            var diasSinEspacio = dias.split(', ');
+            dias = diasSinEspacio.join(' y ');
+            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar de los días " + dias + "<br>";
+          }
+      break; 
+      default:
+      break;
+    }
+  }
+
+if (chequeoTKS){
   switch (TipoTKyAbono)  {
     case 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)':
       datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
       datosEvento.botonPago = datosEvento.BotondePagoAbono;
-      break;
+    break;
     case 'SI, TENGO LA TK CORAZÓN':
       datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
       datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
       console.log(datosEvento.aPagar);
-      break; 
+    break; 
     case 'SI, TENGO LA TK BENEFACTOR':
       datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
       datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
-      break; 
+    break; 
     case 'NINGUNA DE LAS ANTERIORES':
       datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
       datosEvento.aPagar = datosEvento.ValorEvento;
+    break;
     case 'VALOR UNICO':
       datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
       datosEvento.aPagar = datosEvento.ValorEvento;
-      break; 
+    break; 
     default:
-      break;
+    break;
   }  
-  
-  datosEvento = ArmoPago(datosEvento, datosMail);
-  datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
-  if (datosEvento.Tipo == "Preceptos"){
-    datosEvento = Preceptos(datosMail, datosEvento, TituloEvento);
-  }
+}
 
-  ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet);
+datosEvento = ArmoPago(datosEvento, datosMail);
+datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
+if (datosEvento.Tipo == "Preceptos"){
+  datosEvento = Preceptos(datosMail, datosEvento, TituloEvento);
+}
 
-  if (infoTKAbono == "SI, me gustaría!"){
-    envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
-  }
+ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet);
 
-  ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
-  datosEvento.aPagar).setHorizontalAlignment('right');
-  ActiveSheet.getRange(ActiveRow, buscoColumna('Envio Info',sheet)).setValue("CORREO ENVIADO").setBackground('green').setFontColor('white');
-  ActiveSheet.getRange(ActiveRow, 1).setBackground('#b3d1ff');
-  SpreadsheetApp.flush();
-  function valorPlanilla(valCampo){
-      return ActiveSheet.getRange(ActiveRow, buscoColumna(valCampo,sheet)).getValue()
-  }
+if (infoTKAbono == "SI, me gustaría!"){
+  envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
+}
+
+ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
+datosEvento.aPagar).setHorizontalAlignment('right');
+ActiveSheet.getRange(ActiveRow, buscoColumna('Envio Info',sheet)).setValue("CORREO ENVIADO").setBackground('green').setFontColor('white');
+ActiveSheet.getRange(ActiveRow, 1).setBackground('#b3d1ff');
+SpreadsheetApp.flush();
+function valorPlanilla(valCampo){
+    return ActiveSheet.getRange(ActiveRow, buscoColumna(valCampo,sheet)).getValue()
+}
 /*************************************************************
 ***              FIN CÓDIGO FUNCIÓN PRINCIPAL              ***
 ***                                                        ***
@@ -142,15 +187,15 @@ function procesoRespuestas(e, TituloEvento){
 *** DETERMINO CUÁL ES EL PAIS PARA SABER QUÉ MONEDA Y      ***
 *** TIPO DE PAGO USAR                                      ***
 *************************************************************/
-  function determinoPaisPago(Pais, datosEvento, datosMail){
-    if (Pais == "URUGUAY"){
-      datosEvento.ValorEvento = datosEvento.ValorDolares;
-      datosEvento.Moneda = "US";
-      datosMail.TextoInicial += datosMail.infoPagoPaypal;
-      return datosEvento.BotonPagoDolares;
-    }
-    return datosEvento.botonPago;
+function determinoPaisPago(Pais, datosEvento, datosMail){
+  if (Pais == "URUGUAY"){
+    datosEvento.ValorEvento = datosEvento.ValorDolares;
+    datosEvento.Moneda = "US";
+    datosMail.TextoInicial += datosMail.infoPagoPaypal;
+    return datosEvento.BotonPagoDolares;
   }
+  return datosEvento.botonPago;
+}
 }
 
 /*************************************************************
@@ -224,10 +269,12 @@ function buscaCurso(TituloEvento, Pais){
       }
       var ValorEvento = valorPlanilla('ValorGeneral');
       var ValorTKCorazon = valorPlanilla('ValorTKCorazon');
-      var SinDescuentoTK = valorPlanilla('SinDescuentoTK');
+      var ValorTKBenefactor = valorPlanilla('ValorTKBenefactor');
+      var SinDescuentoTKC = valorPlanilla('SinDescuentoTKC');
+      var SinDescuentoTKB = valorPlanilla('SinDescuentoTKB');
       var SinDescuentoG = valorPlanilla('SinDescuentoG');
-      var SinDescuentoAb = valorPlanilla('SinDescuentoAb');
-      var ValorAbono = valorPlanilla('ValorAbono');
+      var SinDescuentoAb = valorPlanilla('SinDescuentoTKClases');
+      var ValorAbono = valorPlanilla('ValorTKClases');
       var ValorDolares = valorPlanilla('ValorDolares');
       var SinDescuentoDol = valorPlanilla('SinDescuentoDol');
       var BotonPagoDolares = valorPlanilla('BotonPagoDolares');
@@ -241,8 +288,11 @@ function buscaCurso(TituloEvento, Pais){
             if (SinDescuentoG != ""){
                 ValorEvento = SinDescuentoG;
             }
-            if (SinDescuentoTK != ""){
-              ValorTKCorazon = SinDescuentoTK;
+            if (SinDescuentoTKC != ""){
+              ValorTKCorazon = SinDescuentoTKC;
+            }
+            if (SinDescuentoTKB != ""){
+              ValorTKBenefactor = SinDescuentoTKB;
             }
             if (SinDescuentoAb != ""){
                 ValorAbono = SinDescuentoAb;
@@ -267,13 +317,14 @@ function buscaCurso(TituloEvento, Pais){
         LugarEvento:valorPlanilla('Lugar'), 
         botonPago:valorPlanilla('BotondePago'),
         BotondePago1Dia:valorPlanilla('BotondePago1Dia'),
+        BotondePago2Dias:valorPlanilla('BotondePago2Dias'),
         ValorTKCorazon:ValorTKCorazon,
-        ValorTKBenefactor:valorPlanilla('ValorTKBenefactor'),
+        ValorTKBenefactor:ValorTKBenefactor,
         Valor1Dia:valorPlanilla('Valor1Dia'),
         ValorAbono:ValorAbono,
         BotondePagoTKCorazon:valorPlanilla('BotondePagoTKCorazon'),
         BotondePagoTKBenefactor:valorPlanilla('BotondePagoTKBenefactor'),
-        BotondePagoAbono:valorPlanilla('BotondePagoAbono'),
+        BotondePagoAbono:valorPlanilla('BotondePagoTKClases'),
         LineasDePago:"",
         TextoInicial:"",
         infoAcceso:"",
@@ -283,7 +334,15 @@ function buscaCurso(TituloEvento, Pais){
         BotonPagoDolares:BotonPagoDolares,
         BotonPagoDolSinDesc:BotonPagoDolSinDesc,
         infoPrograma:infoPrograma,
-        LinkYoutube:valorPlanilla('LinkYoutube'),
+        diasAParticipar : "",
+        cantDiasElegidos : 0,
+        textoInscPorDia : "",
+        LinkYoutube: valorPlanilla('LinkYoutube'),
+        LinkYoutubeDiaVIERNES:valorPlanilla('LinkYoutube DiaViernes'),
+        LinkYoutubeDiaSABADO:valorPlanilla('LinkYoutube DiaSabado'),
+        LinkYoutubeDiaDOMINGO:valorPlanilla('LinkYoutube DiaDomingo'),
+        LinkYoutubeDiaLUNES:valorPlanilla('LinkYoutube DiaLunes'),
+        LinkYoutubeDiaMARTES:valorPlanilla('LinkYoutube DiaMartes'),
         TextoLink:"<strong>LINK DE ACCESO: </strong>",
         AvisoOnline:"<br><br><strong>La clase se activará el " + 
                     valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong><br>",
@@ -343,8 +402,10 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
   
   separoLinksYoutube();
 
-  var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
-    DatosEvento + datosEvento.infoPrograma + styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + datosEvento.TextoLink + finStyle + 
+  var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
+    styleF22Morado + datosEvento.textoInscPorDia + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
+    DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + 
+    datosEvento.TextoLink + finStyle + 
     styleF18Blue + datosEvento.LinkYoutube + finStyle + styleF22Morado + datosEvento.AvisoOnline + finStyle +
     styleF18 + datosMail.Dudas + finStyle + inicioPieMail + finPieMail;
 
@@ -372,7 +433,8 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
     if (vinculosYoutube.length > 1) {
       datosEvento.LinkYoutube = "";
       vinculosYoutube.forEach( function(valor, indice, array) {
-      datosEvento.LinkYoutube += "<P><strong> Parte " + (indice+1) + ": </strong><a href='" + vinculosYoutube[indice] + "'>" + vinculosYoutube[indice] + "</a></p>";
+      datosEvento.LinkYoutube += "<P><strong> Sesión " + (indice+1) + ": </strong><a href='" + vinculosYoutube[indice] + "'>" + 
+                                  vinculosYoutube[indice] + "</a></p>";
       });
     } else{
       datosEvento.LinkYoutube = "<a href='" + datosEvento.LinkYoutube + "'>" + datosEvento.LinkYoutube + "</a>";
