@@ -11,8 +11,8 @@ function emailOnFormSubmit(e) {
   var btTkClases1 = "https://bit.ly/3srJYSr";
   var btTkClases2 = "https://bit.ly/3gaXIfc";
   var btTkClases3 = "https://bit.ly/37OxpqK";
-  var btTkCorazon = "https://bit.ly/3srJYSr";
-  var btTkBenefactor = "https://bit.ly/3srJYSr";
+  var btTkCorazon = "https://bit.ly/3mfI6en";
+  var btTkBenefactor = "https://bit.ly/3mpC0bF";
   var aPagar = 0;
   var btPago = '';
   var valTarjeta = 0;
@@ -30,17 +30,24 @@ function emailOnFormSubmit(e) {
   var eleccionTk = activeSheet.getRange(activeRow, colTemporal).getValue();
   var textoTK = "";
 
+  var tieneTK = chequeoTkActiva(mail);
+  console.log(tieneTK);
   switch (eleccionTk)  {
     case 'TARJETA KADAMPA CLASES':
-        if (dia >= 1 && dia < 11){
+      if(tieneTK == 'TARJETA KADAMPA CLASES'){
         tkClasesAPagar = tkClases1;
         btPagoTkClases = btTkClases1;
-        } else if (dia > 10 && dia < 21){
-          tkClasesAPagar = tkClases2;
-          btPagoTkClases = btTkClases2;
-        } else if (dia > 20 && dia <= 31){
-          tkClasesAPagar = tkClases3;
-          btPagoTkClases = btTkClases3;
+      } else {
+          if (dia >= 1 && dia < 11){
+            tkClasesAPagar = tkClases1;
+            btPagoTkClases = btTkClases1;
+          } else if (dia > 10 && dia < 21){
+            tkClasesAPagar = tkClases2;
+            btPagoTkClases = btTkClases2;
+          } else if (dia > 20 && dia <= 31){
+            tkClasesAPagar = tkClases3;
+            btPagoTkClases = btTkClases3;
+          }
         }
         valTarjeta = tkClases1;
         aPagar = tkClasesAPagar;
@@ -110,4 +117,35 @@ function emailOnFormSubmit(e) {
   activeSheet.getRange(activeRow, 12).setBackground('green');
   activeSheet.getRange(activeRow, 12).setFontColor('white');
   SpreadsheetApp.flush();
+}
+
+function chequeoTkActiva(){
+  var correo = 'pablo.mandile@gmail.com';
+  var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
+  var sheetDatosTKClases = ss.getSheetByName("A 2021");
+  var sheetDatosTKCorBen = ss.getSheetByName("T 2021");
+  var datosTKClases = sheetDatosTKClases.getRange(3, 1, sheetDatosTKClases.getLastRow(),sheetDatosTKClases.getLastColumn()).getValues();
+  var datosTKCorBen = sheetDatosTKCorBen.getRange(4, 1, sheetDatosTKCorBen.getLastRow(),sheetDatosTKCorBen.getLastColumn()).getValues();
+  var TK = '';
+  console.log(correo);
+  for(var i = 0;i<datosTKClases.length; i++){
+    if(datosTKClases[i][5] == correo){
+      if(datosTKClases[i][1] == 'A' ){
+        TK = 'TARJETA KADAMPA CLASES';
+      }
+    }
+  }
+  for(var i = 0;i<datosTKCorBen.length; i++){
+    if(datosTKCorBen[i][6] == correo){
+      if(datosTKCorBen[i][3] == 'AA' ){
+        if(datosTKCorBen[i][4] == 'BEN'){
+          TK = 'TARJETA KADAMPA BENEFACTOR';
+        } else if(datosTKCorBen[i][4] == 'COR'){
+          TK = 'TARJETA KADAMPA CORAZÓN';
+        }
+      }
+    }
+  }
+  console.log(TK);
+  return TK;
 }
