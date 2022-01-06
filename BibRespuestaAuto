@@ -76,15 +76,24 @@ function procesoRespuestas(e, TituloEvento){
             eventoPorDias : 'PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',
             diasAParticipar: 'SELECCIONA QUE DIA/S PARTICIPARÁS'
   }
+  var Nombre = "";
+  var Apellido = "";
+  var mail = "";
   var infoTKAbono = (buscoColumna(Preguntas.infoTKAB,sheet) != 0) ? valorPlanilla(Preguntas.infoTKAB) : "";
   var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "ARGENTINA";
   var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "ONLINE";
-  var Nombre = (buscoColumna(Preguntas.nombre,sheet) != 0) ? valorPlanilla(Preguntas.nombre) : "";
+  Nombre = (buscoColumna(Preguntas.nombre,sheet) != 0) ? valorPlanilla(Preguntas.nombre) : "";
   if (Nombre == "") {
     Nombre = (buscoColumna(Preguntas.nombreAdulto,sheet) != 0) ? valorPlanilla(Preguntas.nombreAdulto) : "";
   };
-  var Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
-  var mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
+  Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
+  mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
+
+  //quito espacios de los ingresos de usuario
+  Nombre = Nombre.trim();
+  Apellido = Apellido.trim();
+  mail = mail.trim();
+
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
   var diasAParticipar = (buscoColumna(Preguntas.diasAParticipar,sheet) != 0) ? valorPlanilla(Preguntas.diasAParticipar) : "";
@@ -147,79 +156,79 @@ function procesoRespuestas(e, TituloEvento){
       break;
     }
   }
-var tieneTK = chequeoTkActiva(mail);
+  var tieneTK = chequeoTkActiva(mail);
 
-if (chequeoTKS){
-  switch (TipoTKyAbono)  {
-    case 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)':
-      if(tieneTK == TipoTKyAbono){
-        datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoAbono;
-      }
-    break;
-    case 'SI, TENGO LA TK CORAZÓN':
-      if(tieneTK == TipoTKyAbono){
-        datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
-      }
-    break; 
-    case 'SI, TENGO LA TK BENEFACTOR':
-      if(tieneTK == TipoTKyAbono){
-        datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
-      }
-    break; 
-    case 'NINGUNA DE LAS ANTERIORES':
-      datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-      datosEvento.aPagar = datosEvento.ValorEvento;
-    break;
-    case 'VALOR UNICO':
-      datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-      datosEvento.aPagar = datosEvento.ValorEvento;
-    break; 
-    default:
-    break;
-  }  
-}
-
-datosEvento = ArmoPago(datosEvento, datosMail);
-datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
-if (datosEvento.Tipo == "Preceptos"){
-  datosEvento = Preceptos(datosMail, datosEvento, TituloEvento);
-}
-
-ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet);
-
-if (infoTKAbono == "SI, me gustaría!"){
-  envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
-}
-
-ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
-datosEvento.aPagar).setHorizontalAlignment('right');
-ActiveSheet.getRange(ActiveRow, buscoColumna('Envio Info',sheet)).setValue("CORREO ENVIADO").setBackground('green').setFontColor('white');
-ActiveSheet.getRange(ActiveRow, 1).setBackground('#b3d1ff');
-SpreadsheetApp.flush();
-function valorPlanilla(valCampo){
-    return ActiveSheet.getRange(ActiveRow, buscoColumna(valCampo,sheet)).getValue()
-}
-/*************************************************************
-***              FIN CÓDIGO FUNCIÓN PRINCIPAL              ***
-***                                                        ***
-*************************************************************/
-
-/*************************************************************
-*** DETERMINO CUÁL ES EL PAIS PARA SABER QUÉ MONEDA Y      ***
-*** TIPO DE PAGO USAR                                      ***
-*************************************************************/
-function determinoPaisPago(Pais, datosEvento, datosMail){
-  if (Pais == "URUGUAY"){
-    datosEvento.ValorEvento = datosEvento.ValorDolares;
-    datosEvento.Moneda = "US";
-    datosMail.TextoInicial += datosMail.infoPagoPaypal;
-    return datosEvento.BotonPagoDolares;
+  if (chequeoTKS){
+    switch (TipoTKyAbono)  {
+      case 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)':
+        if(tieneTK == TipoTKyAbono){
+          datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
+          datosEvento.botonPago = datosEvento.BotondePagoAbono;
+        }
+      break;
+      case 'SI, TENGO LA TK CORAZÓN':
+        if(tieneTK == TipoTKyAbono){
+          datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
+          datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
+        }
+      break; 
+      case 'SI, TENGO LA TK BENEFACTOR':
+        if(tieneTK == TipoTKyAbono){
+          datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
+          datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
+        }
+      break; 
+      case 'NINGUNA DE LAS ANTERIORES':
+        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+        datosEvento.aPagar = datosEvento.ValorEvento;
+      break;
+      case 'VALOR UNICO':
+        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+        datosEvento.aPagar = datosEvento.ValorEvento;
+      break; 
+      default:
+      break;
+    }  
   }
-  return datosEvento.botonPago;
-}
+
+  datosEvento = ArmoPago(datosEvento, datosMail);
+  datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
+  if (datosEvento.Tipo == "Preceptos"){
+    datosEvento = Preceptos(datosMail, datosEvento, TituloEvento);
+  }
+
+  ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet);
+
+  if (infoTKAbono == "SI, me gustaría!"){
+    envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
+  }
+
+  ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
+  datosEvento.aPagar).setHorizontalAlignment('right');
+  ActiveSheet.getRange(ActiveRow, buscoColumna('Envio Info',sheet)).setValue("CORREO ENVIADO").setBackground('green').setFontColor('white');
+  ActiveSheet.getRange(ActiveRow, 1).setBackground('#b3d1ff');
+  SpreadsheetApp.flush();
+  function valorPlanilla(valCampo){
+      return ActiveSheet.getRange(ActiveRow, buscoColumna(valCampo,sheet)).getValue()
+  }
+  /*************************************************************
+  ***              FIN CÓDIGO FUNCIÓN PRINCIPAL              ***
+  ***                                                        ***
+  *************************************************************/
+
+  /*************************************************************
+  *** DETERMINO CUÁL ES EL PAIS PARA SABER QUÉ MONEDA Y      ***
+  *** TIPO DE PAGO USAR                                      ***
+  *************************************************************/
+  function determinoPaisPago(Pais, datosEvento, datosMail){
+    if (Pais == "URUGUAY"){
+      datosEvento.ValorEvento = datosEvento.ValorDolares;
+      datosEvento.Moneda = "US";
+      datosMail.TextoInicial += datosMail.infoPagoPaypal;
+      return datosEvento.BotonPagoDolares;
+    }
+    return datosEvento.botonPago;
+  }
 }
 
 /*************************************************************
