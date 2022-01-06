@@ -1,6 +1,7 @@
 /*************************************************************
 *** PRIMER PROCESO QUE SE EJECUTA AL ABRIR LA PLANILLA     ***
-***VINCULADA CON EL EVENTO PARA SU FORMATEO                ***
+*** VINCULADA CON EL EVENTO PARA SU FORMATEO               ***
+*** Y AGREGAR UN CUSTOM MENU                               ***
 *************************************************************/
 function formateoPlanilla(){
   // Add a custom menu to the spreadsheet.
@@ -146,21 +147,27 @@ function procesoRespuestas(e, TituloEvento){
       break;
     }
   }
+var tieneTK = chequeoTkActiva(mail);
 
 if (chequeoTKS){
   switch (TipoTKyAbono)  {
     case 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)':
-      datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
-      datosEvento.botonPago = datosEvento.BotondePagoAbono;
+      if(tieneTK == TipoTKyAbono){
+        datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoAbono;
+      }
     break;
     case 'SI, TENGO LA TK CORAZÓN':
-      datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
-      datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
-      console.log(datosEvento.aPagar);
+      if(tieneTK == TipoTKyAbono){
+        datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
+      }
     break; 
     case 'SI, TENGO LA TK BENEFACTOR':
-      datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
-      datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
+      if(tieneTK == TipoTKyAbono){
+        datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
+        datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
+      }
     break; 
     case 'NINGUNA DE LAS ANTERIORES':
       datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
@@ -564,7 +571,33 @@ function envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow
     colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
     ActiveSheet.getRange(ActiveRow, colTemporal).setValue("INFO TKS ENVIADA").setBackground('green').setFontColor('white');
 }
-
+function chequeoTkActiva(correo){
+  var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
+  var sheetDatosTKClases = ss.getSheetByName("A 2022");
+  var sheetDatosTKCorBen = ss.getSheetByName("T 2022");
+  var datosTKClases = sheetDatosTKClases.getRange(3, 1, sheetDatosTKClases.getLastRow(),sheetDatosTKClases.getLastColumn()).getValues();
+  var datosTKCorBen = sheetDatosTKCorBen.getRange(4, 1, sheetDatosTKCorBen.getLastRow(),sheetDatosTKCorBen.getLastColumn()).getValues();
+  var membresiaTK = '';
+  for(var i = 0;i<datosTKClases.length; i++){
+    if(datosTKClases[i][5] == correo){
+      if(datosTKClases[i][1] == 'A' ){
+        membresiaTK = 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)';
+      }
+    }
+  }
+  for(var i = 0;i<datosTKCorBen.length; i++){
+    if(datosTKCorBen[i][6] == correo){
+      if(datosTKCorBen[i][3] == 'AA' ){
+        if(datosTKCorBen[i][4] == 'BEN'){
+          membresiaTK = 'SI, TENGO LA TK BENEFACTOR';
+        } else if(datosTKCorBen[i][4] == 'COR'){
+          membresiaTK = 'SI, TENGO LA TK CORAZÓN';
+        }
+      }
+    }
+  }
+  return membresiaTK;
+}
 
 /**************************************************************
 *** AGREGAR EL SIGUIENTE BLOQUE DE CÓDIGO EN EL APPS SCRIPT ***
