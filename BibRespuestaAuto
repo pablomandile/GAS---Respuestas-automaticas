@@ -581,6 +581,7 @@ function envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow
     ActiveSheet.getRange(ActiveRow, colTemporal).setValue("INFO TKS ENVIADA").setBackground('green').setFontColor('white');
 }
 function chequeoTkActiva(correo){
+  var correoPlanilla = "";
   var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
   var sheetDatosTKClases = ss.getSheetByName("A 2022");
   var sheetDatosTKCorBen = ss.getSheetByName("T 2022");
@@ -588,14 +589,20 @@ function chequeoTkActiva(correo){
   var datosTKCorBen = sheetDatosTKCorBen.getRange(4, 1, sheetDatosTKCorBen.getLastRow(),sheetDatosTKCorBen.getLastColumn()).getValues();
   var membresiaTK = '';
   for(var i = 0;i<datosTKClases.length; i++){
-    if(datosTKClases[i][5] == correo){
+    correoPlanilla = datosTKClases[i][5].toString();
+    correoPlanilla = correoPlanilla.trim();
+    if(correoPlanilla == correo){
       if(datosTKClases[i][1] == 'A' ){
         membresiaTK = 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)';
       }
     }
   }
   for(var i = 0;i<datosTKCorBen.length; i++){
-    if(datosTKCorBen[i][6] == correo){
+    correoPlanilla = datosTKCorBen[i][6].toString();
+    correoPlanilla = correoPlanilla.trim();
+    if(correoPlanilla == correo){
+          Logger.log(correoPlanilla);
+    Logger.log(correo);
       if(datosTKCorBen[i][3] == 'AA' ){
         if(datosTKCorBen[i][4] == 'BEN'){
           membresiaTK = 'SI, TENGO LA TK BENEFACTOR';
@@ -605,6 +612,7 @@ function chequeoTkActiva(correo){
       }
     }
   }
+  Logger.log(membresiaTK);
   return membresiaTK;
 }
 
