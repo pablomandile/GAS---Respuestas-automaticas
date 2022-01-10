@@ -91,12 +91,11 @@ function emailOnFormSubmit(e) {
   "<br><font size='3' color=\"black\">Tu importe a abonar es: $" + aPagar + "</font>" + lineaPago1 + lineaPago2 +
   "<p>También tenés la opción de abonar con Transferencia Bancaria, aquí te dejamos nuestros datos.</p>"+
   "<section>Nombre: CENTRO DE MEDITACIÓN KADAMPA ARGENTINA <br>"+
-  "Banco Santander Río Cuenta Corriente en Pesos <br>"+
-  "935/9 Sucursal: 395 <br>"+
+  "Banco Santander Río Cuenta Corriente en Pesos Nro:<br>"+
+  "001896/8 Sucursal: 429 <br>"+
   "CUIT 30-71440026-2 <br>"+
-  "CBU: 0720395 2 20000000093590 <br>"+
-  "ALIAS: JABON.ACEITE.POTRO <br>"+
-  "Por favor enviar el comprobante</section>"+
+  "CBU: 0720429020000000189686 <br>"+
+  "ALIAS: PAZ.PURA.INTERIOR <br></section>" +
   "<p>Para agilizar la registración de tu pago, te pedimos que nos ayudes enviándonos" +
   "una foto del comprobante de pago por mail. <br>"+
   "¡¡Muchas gracias!!</p>"+
