@@ -93,6 +93,7 @@ function procesoRespuestas(e, TituloEvento){
   Nombre = Nombre.trim();
   Apellido = Apellido.trim();
   mail = mail.trim();
+  mail = mail.toLowerCase();
 
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
@@ -156,7 +157,7 @@ function procesoRespuestas(e, TituloEvento){
       break;
     }
   }
-  var tieneTK = chequeoTkActiva(mail);
+  var tieneTK = chequeoTkActiva(mail, datosMail, TipoTKyAbono, datosEvento);
 
   if (chequeoTKS){
     switch (TipoTKyAbono)  {
@@ -181,10 +182,12 @@ function procesoRespuestas(e, TituloEvento){
       case 'NINGUNA DE LAS ANTERIORES':
         datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
         datosEvento.aPagar = datosEvento.ValorEvento;
+        datosEvento.textoErrorMembresia = '';
       break;
       case 'VALOR UNICO':
         datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
         datosEvento.aPagar = datosEvento.ValorEvento;
+        datosEvento.textoErrorMembresia = '';
       break; 
       default:
       break;
@@ -272,7 +275,9 @@ function CargoDatosMail(){
         infoAccesoPreceptos:valorPlanilla('Preceptos'),
         ValorAbono:valorPlanilla('ValorAbono'),
         envioInfoTK:valorPlanilla('envioInfoTK'),
-        infoPagoPaypal:valorPlanilla('infoPagoPaypal')
+        infoPagoPaypal:valorPlanilla('infoPagoPaypal'),
+        errorEnMembresia1:valorPlanilla('errorEnMembresia1'),
+        errorEnMembresia2:valorPlanilla('errorEnMembresia2')
       };
     return infMail;
     function valorPlanilla(valCampo){
@@ -370,6 +375,7 @@ function buscaCurso(TituloEvento, Pais){
         diasAParticipar : "",
         cantDiasElegidos : 0,
         textoInscPorDia : "",
+        textoErrorMembresia: "",
         LinkYoutube: valorPlanilla('LinkYoutube'),
         LinkYoutubeDiaVIERNES:valorPlanilla('LinkYoutube DiaViernes'),
         LinkYoutubeDiaSABADO:valorPlanilla('LinkYoutube DiaSabado'),
@@ -437,6 +443,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
 
   var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
     styleF22Morado + datosEvento.textoInscPorDia + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
+    styleF22 + datosEvento.textoErrorMembresia + finStyle + styleF22 + datosEvento.pagoTransfer + finStyle + 
     DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + 
     datosEvento.TextoLink + finStyle + 
     styleF18Blue + datosEvento.LinkYoutube + finStyle + styleF22Morado + datosEvento.AvisoOnline + finStyle +
@@ -580,7 +587,12 @@ function envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow
     colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
     ActiveSheet.getRange(ActiveRow, colTemporal).setValue("INFO TKS ENVIADA").setBackground('green').setFontColor('white');
 }
-function chequeoTkActiva(correo){
+
+/**************************************************************
+*** CHEQUEA EN BASE A LA ELECCIÓN DE MEMBRESÍA DE USUARIO   ***
+*** SI ESTÁ ACTIVA CONSULTANDO PLANILLA TKS PAGOS POR AÑO   ***
+**************************************************************/
+function chequeoTkActiva(correo, datosMail, TipoTKyAbono, datosEvento){
   var correoPlanilla = "";
   var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
   var sheetDatosTKClases = ss.getSheetByName("A 2022");
@@ -594,6 +606,9 @@ function chequeoTkActiva(correo){
     if(correoPlanilla == correo){
       if(datosTKClases[i][1] == 'A' ){
         membresiaTK = 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)';
+        datosEvento.textoErrorMembresia = "";
+      }else{
+        datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
       }
     }
   }
@@ -602,12 +617,16 @@ function chequeoTkActiva(correo){
     correoPlanilla = correoPlanilla.trim();
     if(correoPlanilla == correo){
           Logger.log(correoPlanilla);
-    Logger.log(correo);
+          Logger.log(correo);
       if(datosTKCorBen[i][3] == 'AA' ){
         if(datosTKCorBen[i][4] == 'BEN'){
           membresiaTK = 'SI, TENGO LA TK BENEFACTOR';
+          datosEvento.textoErrorMembresia = "";
         } else if(datosTKCorBen[i][4] == 'COR'){
           membresiaTK = 'SI, TENGO LA TK CORAZÓN';
+          datosEvento.textoErrorMembresia = "";
+        } else {
+          datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
         }
       }
     }
