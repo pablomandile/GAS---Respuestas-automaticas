@@ -70,6 +70,7 @@ function procesoRespuestas(e, TituloEvento){
             nombreAdulto : 'Nombre y apellido del Adulto que acompañara al niñ@',
             apellido : 'Apellido',
             mail : 'Dirección de correo electrónico',
+            mailTK : 'Dirección de correo electrónico TK',
             invitadoNombre : 'NOMBRE Y APELLIDO DEL INVITADO/A',
             tarjetasyabono: '¿TENÉS ALGUNA DE NUESTRAS TARJETAS KADAMPAS?',
             invitadoMail : 'Dirección de correo electrónico INVITADO/A',
@@ -79,6 +80,7 @@ function procesoRespuestas(e, TituloEvento){
   var Nombre = "";
   var Apellido = "";
   var mail = "";
+  var completarDatos = false;
   var infoTKAbono = (buscoColumna(Preguntas.infoTKAB,sheet) != 0) ? valorPlanilla(Preguntas.infoTKAB) : "";
   var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "ARGENTINA";
   var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "ONLINE";
@@ -88,6 +90,10 @@ function procesoRespuestas(e, TituloEvento){
   };
   Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
   mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
+  if (mail == ""){
+    mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mailTK) : "";
+    completarDatos = true;
+  }
 
   //quito espacios de los ingresos de usuario
   Nombre = Nombre.trim();
@@ -105,6 +111,9 @@ function procesoRespuestas(e, TituloEvento){
   var datosMail = CargoDatosMail();    
   /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
       DESDE LA HOJA CRSOS Y MAILINFO */
+  datosEvento.NombreUsuario = Nombre;
+  datosEvento.ApellidoUsuario = Apellido;
+  datosEvento.MailUsuario = mail;
 
   if (datosEvento.Tipo == "Clase día del Amigo 2x1"){
     var claseInvitacion = {
@@ -165,24 +174,31 @@ function procesoRespuestas(e, TituloEvento){
         if(tieneTK == TipoTKyAbono){
           datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
           datosEvento.botonPago = datosEvento.BotondePagoAbono;
+          datosEvento.textoErrorMembresia = "";
         }
       break;
       case 'SI, TENGO LA TK CORAZÓN':
         if(tieneTK == TipoTKyAbono){
           datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
           datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
+          datosEvento.textoErrorMembresia = "";
         }
       break; 
       case 'SI, TENGO LA TK BENEFACTOR':
         if(tieneTK == TipoTKyAbono){
           datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
           datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
+          datosEvento.textoErrorMembresia = "";
         }
       break; 
       case 'NINGUNA DE LAS ANTERIORES':
-        datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
-        datosEvento.aPagar = datosEvento.ValorEvento;
-        datosEvento.textoErrorMembresia = '';
+        if(tieneTK != ''){
+          datosEvento.textoErrorMembresia = '<br><strong>Tienes una membresía activa</strong>, ¡por favor vuelve a inscribirte con la opción correcta!<br><br>';
+        } else{
+          datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
+          datosEvento.aPagar = datosEvento.ValorEvento;
+          datosEvento.textoErrorMembresia = '';
+        }
       break;
       case 'VALOR UNICO':
         datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
@@ -205,7 +221,12 @@ function procesoRespuestas(e, TituloEvento){
   if (infoTKAbono == "SI, me gustaría!"){
     envioInfoTKyAbono(infoTKAbono, datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
   }
-
+  if(completarDatos){
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Nombre',sheet)).setValue(datosEvento.NombreUsuario);
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Apellido',sheet)).setValue(datosEvento.ApellidoUsuario);
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Dirección de correo electrónico',sheet)).setValue(datosEvento.MailUsuario);
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Teléfono celular',sheet)).setValue(datosEvento.TelefonoUsuario);
+  }
   ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
   datosEvento.aPagar).setHorizontalAlignment('right');
   ActiveSheet.getRange(ActiveRow, buscoColumna('Envio Info',sheet)).setValue("CORREO ENVIADO").setBackground('green').setFontColor('white');
@@ -353,6 +374,10 @@ function buscaCurso(TituloEvento, Pais){
         Tipo:valorPlanilla('Tipo'),
         Disponibilidad:valorPlanilla('Disponibilidad'), 
         LugarEvento:valorPlanilla('Lugar'), 
+        NombreUsuario: "",
+        ApellidoUsuario: "",
+        MailUsuario:"",
+        TelefonoUsuario:"",
         botonPago:valorPlanilla('BotondePago'),
         BotondePago1Dia:valorPlanilla('BotondePago1Dia'),
         BotondePago2Dias:valorPlanilla('BotondePago2Dias'),
@@ -437,7 +462,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
     styleF18 + "<br/>Disponible por: " + datosEvento.Disponibilidad + finStyle +
     styleF18 + "<br/>Lugar: " + finStyle + styleF18Blue + "<strong>" + datosEvento.LugarEvento + "</strong>" + finStyle;
   
-  var saludoInicial = styleF28 + "¡Hola " + '<strong>' + Nombre + " " + Apellido + "</strong>!" + finStyle;
+  var saludoInicial = styleF28 + "¡Hola " + '<strong>' + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + "</strong>!" + finStyle;
   
   separoLinksYoutube();
 
@@ -452,7 +477,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, Nombre, Apellido, mail, TituloEv
   // More info for Advanced Options Parameters 
   // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
   var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
-  MailApp.sendEmail(mail, datosEvento.subject, emailBody, advancedOpts);
+  MailApp.sendEmail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
 
   if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
     console.log(claseInvitacion.invitadoMail);
@@ -604,9 +629,12 @@ function chequeoTkActiva(correo, datosMail, TipoTKyAbono, datosEvento){
     correoPlanilla = datosTKClases[i][5].toString();
     correoPlanilla = correoPlanilla.trim();
     if(correoPlanilla == correo){
+        datosEvento.NombreUsuario = datosTKClases[i][2];
+        datosEvento.ApellidoUsuario = datosTKClases[i][3];
+        datosEvento.MailUsuario = datosTKClases[i][5];
+        datosEvento.TelefonoUsuario = datosTKClases[i][4];
       if(datosTKClases[i][1] == 'A' ){
         membresiaTK = 'SI, TENGO LA TK CLASES (Antes llamada ABONO MENSUAL)';
-        datosEvento.textoErrorMembresia = "";
       }else{
         datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
       }
@@ -616,15 +644,18 @@ function chequeoTkActiva(correo, datosMail, TipoTKyAbono, datosEvento){
     correoPlanilla = datosTKCorBen[i][6].toString();
     correoPlanilla = correoPlanilla.trim();
     if(correoPlanilla == correo){
+          datosEvento.NombreUsuario = datosTKCorBen[i][1];
+          datosEvento.ApellidoUsuario = datosTKCorBen[i][2];
+          datosEvento.MailUsuario = datosTKCorBen[i][6];
+          datosEvento.TelefonoUsuario = datosTKCorBen[i][8];
+          Logger.log(datosEvento.MailUsuario);
           Logger.log(correoPlanilla);
           Logger.log(correo);
       if(datosTKCorBen[i][3] == 'AA' ){
         if(datosTKCorBen[i][4] == 'BEN'){
           membresiaTK = 'SI, TENGO LA TK BENEFACTOR';
-          datosEvento.textoErrorMembresia = "";
         } else if(datosTKCorBen[i][4] == 'COR'){
           membresiaTK = 'SI, TENGO LA TK CORAZÓN';
-          datosEvento.textoErrorMembresia = "";
         } else {
           datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
         }
