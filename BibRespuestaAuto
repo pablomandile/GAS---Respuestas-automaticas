@@ -169,10 +169,8 @@ function procesoRespuestas(e, TituloEvento){
       break;
     }
   }
-Logger.log(TipoTKyAbono);
   if(TipoTKyAbono == 'SI, TENGO TARJETA KADAMPA'){
     var tieneTK = chequeoTkActiva(mail, datosMail, datosEvento, TipoTKyAbono);
-    Logger.log(tieneTK);
   } else if(chequeoTKS == true){
       datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
       datosEvento.aPagar = datosEvento.ValorEvento;
@@ -208,7 +206,6 @@ Logger.log(TipoTKyAbono);
       case 'SIN MEMBRESIA':
           datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
           datosEvento.aPagar = datosEvento.ValorEvento;
-          Logger.log('pasa por sin m');
       break;
       default:
       break;
@@ -632,8 +629,6 @@ function envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Ape
 function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono){
   var correoPlanilla = "";
   var membresiaTK = '';
-  var membresiaTKCMKA = '';
-  var membresiaTKZN = '';
   var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
   var sheetDatosTKCMKA = ss.getSheetByName("2022");
   var datosTKCMKA = sheetDatosTKCMKA.getRange(3, 1, sheetDatosTKCMKA.getLastRow(),9).getValues();
@@ -641,76 +636,79 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono){
   var sheetDatosTKZN = ss2.getSheetByName('TK 2022');
   var datosTKZN = sheetDatosTKZN.getRange(3, 1, sheetDatosTKZN.getLastRow(), 9).getValues();
 
-  for(var i = 0;i<datosTKCMKA.length; i++){
-    correoPlanilla = datosTKCMKA[i][6].toString();
-    correoPlanilla = correoPlanilla.trim();
-    if(correoPlanilla == correo){
-      datosEvento.NombreUsuario = datosTKCMKA[i][1];
-      datosEvento.ApellidoUsuario = datosTKCMKA[i][2];
-      datosEvento.MailUsuario = correoPlanilla;
-      datosEvento.TelefonoUsuario = datosTKCMKA[i][7];
-      if(datosTKCMKA[i][3] == 'A' ){
-        switch (datosTKCMKA[i][4]){
-          case 'CLA':
-                membresiaTK = 'TK CLASES (Antes llamada ABONO MENSUAL)';
-          break;
-          case 'COR':
-                membresiaTK = 'TK CORAZÓN';
-          break;
-          case 'BEN':
-                membresiaTKCMKA = 'TK BENEFACTOR';
-          break;
-          default:
-            membresiaTK = 'SIN MEMBRESIA';
-          break;
+  buscoPlanillaCMKA();
+
+  function buscoPlanillaCMKA(){
+    for(var i = 0;i<datosTKCMKA.length; i++){
+      correoPlanilla = datosTKCMKA[i][6].toString();
+      correoPlanilla = correoPlanilla.trim();
+      if(correoPlanilla == correo){
+        datosEvento.NombreUsuario = datosTKCMKA[i][1];
+        datosEvento.ApellidoUsuario = datosTKCMKA[i][2];
+        datosEvento.MailUsuario = correoPlanilla;
+        datosEvento.TelefonoUsuario = datosTKCMKA[i][7];
+        if(datosTKCMKA[i][3] == 'A' ){
+          switch (datosTKCMKA[i][4]){
+            case 'CLA':
+                  membresiaTK = 'TK CLASES (Antes llamada ABONO MENSUAL)';
+            break;
+            case 'COR':
+                  membresiaTK = 'TK CORAZÓN';
+            break;
+            case 'BEN':
+                  membresiaTK = 'TK BENEFACTOR';
+            break;
+            default:
+              membresiaTK = 'SIN MEMBRESIA';
+            break;
+          }
+        } else {
+          membresiaTK = 'SIN MEMBRESIA';
         }
-      } else {
-        membresiaTKCMKA = 'SIN MEMBRESIA';
-      }
-    } 
+      } 
+   }
+   if (membresiaTK == 'SIN MEMBRESIA'){
+     buscoPlanillaZN();
+   }
   }
 
-  for(var i = 0;i<datosTKZN.length; i++){
-    correoPlanilla = datosTKZN[i][7].toString();
-    correoPlanilla = correoPlanilla.trim();
-    if(correoPlanilla == correo){
-      datosEvento.NombreUsuario = datosTKZN[i][1];
-      datosEvento.ApellidoUsuario = datosTKZN[i][2];
-      datosEvento.MailUsuario = correoPlanilla;
-      datosEvento.TelefonoUsuario = datosTKZN[i][6];
-      if(datosTKZN[i][3] == 'A' ){
-        switch (datosTKZN[i][4]){
-          case 'CLA':
-                membresiaTK = 'TK CLASES (Antes llamada ABONO MENSUAL)';
-          break;
-          case 'COR':
-                membresiaTK = 'TK CORAZÓN';
-          break;
-          case 'BEN':
-                membresiaTK = 'TK BENEFACTOR';
-          break;
-          default:
-            membresiaTKZN = 'SIN MEMBRESIA';
-          break;
+  function buscoPlanillaZN(){
+    for(var i = 0;i<datosTKZN.length; i++){
+      correoPlanilla = datosTKZN[i][7].toString();
+      correoPlanilla = correoPlanilla.trim();
+      if(correoPlanilla == correo){
+        datosEvento.NombreUsuario = datosTKZN[i][1];
+        datosEvento.ApellidoUsuario = datosTKZN[i][2];
+        datosEvento.MailUsuario = correoPlanilla;
+        datosEvento.TelefonoUsuario = datosTKZN[i][6];
+        if(datosTKZN[i][3] == 'A' ){
+          switch (datosTKZN[i][4]){
+            case 'CLA':
+                  membresiaTK = 'TK CLASES (Antes llamada ABONO MENSUAL)';
+            break;
+            case 'COR':
+                  membresiaTK = 'TK CORAZÓN';
+            break;
+            case 'BEN':
+                  membresiaTK = 'TK BENEFACTOR';
+            break;
+            default:
+              membresiaTK = 'SIN MEMBRESIA';
+            break;
+          }
+        } else {
+          membresiaTK = 'SIN MEMBRESIA';
         }
-      } else {
-        membresiaTKZN = 'SIN MEMBRESIA';
-      }
-    } 
+      } 
+    }
   }
 
   if (membresiaTK == ""){
     membresiaTK = 'SIN MEMBRESIA';
+  }
+  if (membresiaTK == 'SIN MEMBRESIA'){
     datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
   }
-  if (membresiaTKCMKA == 'SIN MEMBRESIA'){
-    if(membresiaTKZN == 'SIN MEMBRESIA'){
-      datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
-      membresiaTK = 'SIN MEMBRESIA';
-    }
-  }
-
-  Logger.log(membresiaTK);
   return membresiaTK;
 }
 
