@@ -27,24 +27,24 @@ function formateoPlanilla(){
       ActiveSheet.getRange(1, i+1).setBackground('#CFE2F3');
       ActiveSheet.autoResizeColumn(i+1);
     }
-    var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    var hojaDatosInscripcion = activeSpreadsheet.insertSheet();
-    hojaDatosInscripcion.setName("Envio a Confirmados");
-    var nuevaHoja = activeSpreadsheet.getSheetByName("Envio a Confirmados");
-    nuevaHoja.getRange(1, 1).setValue('Nombre');
-    nuevaHoja.getRange(1, 2).setValue('Apellido');
-    nuevaHoja.getRange(1, 3).setValue('Correo');
-    nuevaHoja.getRange(1, 4).setValue('Membresía');
-    nuevaHoja.getRange(1, 5).setValue('Links Youtube');
-    nuevaHoja.getRange(1, 6).setValue('Pago'); // ok
-    nuevaHoja.getRange(1, 7).setValue('Recordatorio pago');
-    nuevaHoja.getRange(1, 8).setValue('Confirmación'); // Correo Enviado
-    for (var i = 0; i < 8; i++){
-      nuevaHoja.getRange(1, i+1).setBackground('#CFE2F3');
-      nuevaHoja.setColumnWidth(i+1,150);
-    }
-    var cambioDeHoja = activeSpreadsheet.getSheetByName("Respuestas de formulario 1");
-    cambioDeHoja.activate();
+    // var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    // var hojaDatosInscripcion = activeSpreadsheet.insertSheet();
+    // hojaDatosInscripcion.setName("Envio a Confirmados");
+    // var nuevaHoja = activeSpreadsheet.getSheetByName("Envio a Confirmados");
+    // nuevaHoja.getRange(1, 1).setValue('Nombre');
+    // nuevaHoja.getRange(1, 2).setValue('Apellido');
+    // nuevaHoja.getRange(1, 3).setValue('Correo');
+    // nuevaHoja.getRange(1, 4).setValue('Membresía');
+    // nuevaHoja.getRange(1, 5).setValue('Links Youtube');
+    // nuevaHoja.getRange(1, 6).setValue('Pago'); // ok
+    // nuevaHoja.getRange(1, 7).setValue('Recordatorio pago');
+    // nuevaHoja.getRange(1, 8).setValue('Confirmación'); // Correo Enviado
+    // for (var i = 0; i < 8; i++){
+    //   nuevaHoja.getRange(1, i+1).setBackground('#CFE2F3');
+    //   nuevaHoja.setColumnWidth(i+1,150);
+    // }
+    // var cambioDeHoja = activeSpreadsheet.getSheetByName("Respuestas de formulario 1");
+    // cambioDeHoja.activate();
   }
     SpreadsheetApp.flush();
 }
@@ -76,6 +76,7 @@ function procesoRespuestas(e, TituloEvento){
             tarjetasyabono: '¿TENÉS ALGUNA DE NUESTRAS TARJETAS KADAMPAS?',
             invitadoMail : 'Dirección de correo electrónico INVITADO/A',
             eventoPorDias : 'PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',
+            eventoPorUnDia : 'PODÉS SUMARTE AL EVENTO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',
             diasAParticipar: 'SELECCIONA QUE DIA/S PARTICIPARÁS'
   }
   var Nombre = "";
@@ -104,6 +105,7 @@ function procesoRespuestas(e, TituloEvento){
 
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
+  var eventoPorUnDia = (buscoColumna(Preguntas.eventoPorUnDia,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorUnDia) : "";
   var diasAParticipar = (buscoColumna(Preguntas.diasAParticipar,sheet) != 0) ? valorPlanilla(Preguntas.diasAParticipar) : "";
 
   /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
@@ -167,9 +169,10 @@ function procesoRespuestas(e, TituloEvento){
       break;
     }
   }
-
+Logger.log(TipoTKyAbono);
   if(TipoTKyAbono == 'SI, TENGO TARJETA KADAMPA'){
     var tieneTK = chequeoTkActiva(mail, datosMail, datosEvento, TipoTKyAbono);
+    Logger.log(tieneTK);
   } else if(chequeoTKS == true){
       datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
       datosEvento.aPagar = datosEvento.ValorEvento;
@@ -183,10 +186,14 @@ function procesoRespuestas(e, TituloEvento){
   if (chequeoTKS){
     switch (tieneTK)  {
       case 'TK CLASES (Antes llamada ABONO MENSUAL)':
+        // if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
+        //   datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
+        //   datosEvento.botonPago = datosEvento.BotondePagoAbono;
+        //   datosEvento.textoErrorMembresia = "";
+        // }
         datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
         datosEvento.botonPago = datosEvento.BotondePagoAbono;
         datosEvento.textoErrorMembresia = "";
-        
       break;
       case 'TK CORAZÓN':
         datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
@@ -201,16 +208,19 @@ function procesoRespuestas(e, TituloEvento){
       case 'SIN MEMBRESIA':
           datosEvento.botonPago = determinoPaisPago(Pais, datosEvento, datosMail);
           datosEvento.aPagar = datosEvento.ValorEvento;
+          Logger.log('pasa por sin m');
       break;
       default:
       break;
     }  
   }
 
-  datosEvento = ArmoPago(datosEvento, datosMail);
-  datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
+
   if (datosEvento.Tipo == "Preceptos"){
     datosEvento = Preceptos(datosMail, datosEvento, TituloEvento);
+  } else{
+      datosEvento = ArmoPago(datosEvento, datosMail);
+      datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
   }
 
   ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK);
@@ -381,6 +391,10 @@ function buscaCurso(TituloEvento, Pais){
         ValorTKCorazon:ValorTKCorazon,
         ValorTKBenefactor:ValorTKBenefactor,
         Valor1Dia:valorPlanilla('Valor1Dia'),
+        Valor1DiaTKCOR:valorPlanilla('Valor1DiaTKCOR'),
+        Valor1DiaTKBEN:valorPlanilla('Valor1DiaTKBEN'),
+        BotondePago1DiaTKCOR:valorPlanilla('BotondePago1DiaTKCOR'),
+        BotondePago1DiaTKBEN:valorPlanilla('BotondePago1DiaTKBEN'),
         ValorAbono:ValorAbono,
         BotondePagoTKCorazon:valorPlanilla('BotondePagoTKCorazon'),
         BotondePagoTKBenefactor:valorPlanilla('BotondePagoTKBenefactor'),
@@ -478,7 +492,6 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
   MailApp.sendEmail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
 
   if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
-    console.log(claseInvitacion.invitadoMail);
     var htmlBodyinvitado =  encabezadoMail + "¡Hola " + "<strong>" +
     claseInvitacion.invitadoNombre + "</strong>" + "!" + "<br/><br/>Te contamos que " 
     + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + " te invitó a una clase de meditación <br/>" + 
@@ -537,6 +550,7 @@ return datosEvento;
 function Preceptos(datosMail, datosEvento, TituloEvento){
     datosEvento['infoAcceso'] = datosMail.infoAccesoPreceptos;
     datosEvento['lineas de pago'] = "";
+    datosEvento.textoErrorMembresia = "";
     datosEvento['subject'] = datosEvento.FechaEvento +" " + datosEvento.HoraEvento +" " + TituloEvento + " - " + "Inscripción confirmada";
     datosEvento['TextoInicial'] = datosMail['TextoInicialConfirmado'];
   return datosEvento;
@@ -618,6 +632,8 @@ function envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Ape
 function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono){
   var correoPlanilla = "";
   var membresiaTK = '';
+  var membresiaTKCMKA = '';
+  var membresiaTKZN = '';
   var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
   var sheetDatosTKCMKA = ss.getSheetByName("2022");
   var datosTKCMKA = sheetDatosTKCMKA.getRange(3, 1, sheetDatosTKCMKA.getLastRow(),9).getValues();
@@ -642,17 +658,14 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono){
                 membresiaTK = 'TK CORAZÓN';
           break;
           case 'BEN':
-                membresiaTK = 'TK BENEFACTOR';
+                membresiaTKCMKA = 'TK BENEFACTOR';
           break;
           default:
             membresiaTK = 'SIN MEMBRESIA';
-            datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
           break;
         }
       } else {
-        membresiaTK = 'SIN MEMBRESIA';
-        datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
-        console.log(datosEvento.textoErrorMembresia);
+        membresiaTKCMKA = 'SIN MEMBRESIA';
       }
     } 
   }
@@ -677,14 +690,11 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono){
                 membresiaTK = 'TK BENEFACTOR';
           break;
           default:
-            membresiaTK = 'SIN MEMBRESIA';
-            datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
+            membresiaTKZN = 'SIN MEMBRESIA';
           break;
         }
       } else {
-        membresiaTK = 'SIN MEMBRESIA';
-        datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
-        console.log(datosEvento.textoErrorMembresia);
+        membresiaTKZN = 'SIN MEMBRESIA';
       }
     } 
   }
@@ -693,6 +703,14 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono){
     membresiaTK = 'SIN MEMBRESIA';
     datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
   }
+  if (membresiaTKCMKA == 'SIN MEMBRESIA'){
+    if(membresiaTKZN == 'SIN MEMBRESIA'){
+      datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
+      membresiaTK = 'SIN MEMBRESIA';
+    }
+  }
+
+  Logger.log(membresiaTK);
   return membresiaTK;
 }
 
