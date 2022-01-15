@@ -31,7 +31,6 @@ function emailOnFormSubmit(e) {
   var textoTK = "";
 
   var tieneTK = chequeoTkActiva(mail);
-  console.log(tieneTK);
 
   switch (eleccionTk)  {
     case 'TARJETA KADAMPA CLASES':
@@ -109,7 +108,6 @@ function emailOnFormSubmit(e) {
   // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
   var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
   MailApp.sendEmail(mail, subject, emailBody, advancedOpts);
-  
   // Actualiza los campos en la planilla de cálculo del evento
   activeSheet.getRange(activeRow, 12).setValue("CORREO ENVIADO");
   activeSheet.getRange(activeRow, 11).setValue('$' + aPagar);
@@ -121,30 +119,28 @@ function emailOnFormSubmit(e) {
 
 function chequeoTkActiva(correo){
   var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
-  var sheetDatosTKClases = ss.getSheetByName("A 2022");
-  var sheetDatosTKCorBen = ss.getSheetByName("T 2022");
-  var datosTKClases = sheetDatosTKClases.getRange(3, 1, sheetDatosTKClases.getLastRow(),sheetDatosTKClases.getLastColumn()).getValues();
-  var datosTKCorBen = sheetDatosTKCorBen.getRange(4, 1, sheetDatosTKCorBen.getLastRow(),sheetDatosTKCorBen.getLastColumn()).getValues();
+  var sheetDatosTKS = ss.getSheetByName("2022");
+  var datosTKS = sheetDatosTKS.getRange(3, 2, sheetDatosTKS.getLastRow(), 9).getValues();
   var membresiaTK = '';
-  console.log(correo);
-  for(var i = 0;i<datosTKClases.length; i++){
-    if(datosTKClases[i][5] == correo){
-      if(datosTKClases[i][1] == 'A' ){
-        membresiaTK = 'TARJETA KADAMPA CLASES';
-      }
-    }
-  }
-  for(var i = 0;i<datosTKCorBen.length; i++){
-    if(datosTKCorBen[i][6] == correo){
-      if(datosTKCorBen[i][3] == 'AA' ){
-        if(datosTKCorBen[i][4] == 'BEN'){
-          membresiaTK = 'TARJETA KADAMPA BENEFACTOR';
-        } else if(datosTKCorBen[i][4] == 'COR'){
-          membresiaTK = 'TARJETA KADAMPA CORAZÓN';
+
+  for(var i = 0;i<datosTKS.length; i++){
+    if(datosTKS[i][6] == correo){
+      if(datosTKS[i][3] == 'A' ){
+        switch (datosTKS[i][4]){
+          case 'BEN':
+            membresiaTK = 'TARJETA KADAMPA BENEFACTOR';
+          break;
+          case 'COR':
+            membresiaTK = 'TARJETA KADAMPA CORAZÓN';
+          break;
+          case 'CLA':
+            membresiaTK = 'TARJETA KADAMPA CLASES';
+          break;          
+          default:
+          break;
         }
       }
     }
   }
-  console.log(membresiaTK);
   return membresiaTK;
 }
