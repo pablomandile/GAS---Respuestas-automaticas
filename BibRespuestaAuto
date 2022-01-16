@@ -14,7 +14,7 @@ function formateoPlanilla(){
   var ActiveCol = ActiveSheet.getLastColumn();
   var sheet = ActiveSheet.getDataRange().getValues();
   var colTemporal = "";
-  colTemporal = sheet[0].indexOf('Grabaciones')+1;  
+  colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
   if (colTemporal == 0){
     ActiveSheet.insertColumnAfter(ActiveCol);
     ActiveSheet.getRange(1, ActiveCol+1).setValue('Pendiente');
@@ -22,8 +22,6 @@ function formateoPlanilla(){
     ActiveSheet.getRange(1, ActiveCol+2).setValue('Respuesta');
     ActiveSheet.insertColumnAfter(ActiveCol+2);
     ActiveSheet.getRange(1, ActiveCol+3).setValue('Envio Info TKS');
-    ActiveSheet.insertColumnAfter(ActiveCol+3);
-    ActiveSheet.getRange(1, ActiveCol+4).setValue('Grabaciones');
     var MaxCols = ActiveSheet.getMaxColumns();
     for (var i = 0; i < MaxCols; i++){
       ActiveSheet.getRange(1, i+1).setBackground('#CFE2F3');
