@@ -530,7 +530,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
   var saludoInicial = styleF28 + "¡Hola " + '<strong>' + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + "</strong>!" + finStyle;
   Logger.log(datosEvento.LinkYoutube); 
   separoLinksYoutube();
-Logger.log(datosEvento.LinkYoutube); 
+  Logger.log(datosEvento.LinkYoutube); 
   if (datosEvento.aPagar > 0){
   ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
   ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue(datosEvento.LinkYoutube);
@@ -853,7 +853,8 @@ function envioLinksAConfirmados(){
                               datosInscripcion.apellido + "</strong>!" + e.finStyle;
               htmlBody = partesMail.encabezadoMail + saludoInicial + e.styleF22 + datosMail.TextoInicialConfirmado + e.finStyle + 
                           e.styleF22Tab + 'Membresía: ' + e.finStyle + e.styleF22Morado + datosInscripcion.membresia + e.finStyle + '<br>' +
-                          e.styleF22Morado + datosInscripcion.completoDia + " " + datosInscripcion.diasQueParticipa + e.finStyle + 
+                          e.styleF18 + datosInscripcion.completoDia + datosInscripcion.completoDiaRetiro + 
+                          " " + datosInscripcion.diasQueParticipa + e.finStyle + 
                           datosEvento + e.styleF18 + textoAcceso + e.finStyle + e.styleF18Blue + datosInscripcion.linksYoutube + 
                           e.finStyle + e.styleF22Morado + avisoOnline + e.finStyle +
                           e.styleF18 + datosMail.Dudas + e.finStyle + partesMail.pieMail;
@@ -889,8 +890,21 @@ function envioLinksAConfirmados(){
       membresia: (buscoColumna('Membresía',sheet) != 0) ? valorPlanilla('Membresía', index) : "",
       linksYoutube: (buscoColumna('Links Youtube',sheet) != 0) ? valorPlanilla('Links Youtube', index) : "",
       completoDia: (buscoColumna('PODÉS SUMARTE AL EVENTO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',sheet) != 0) ? valorPlanilla('PODÉS SUMARTE AL EVENTO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:', index) : "",
+      completoDiaRetiro: (buscoColumna('PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',sheet) != 0) ? valorPlanilla('PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:', index) : "",
+      
       diasQueParticipa: (buscoColumna('SELECCIONA QUE DIA/S PARTICIPARÁS',sheet) != 0) ? valorPlanilla('SELECCIONA QUE DIA/S PARTICIPARÁS', index) : "",
     };
+    if(inscripcion.completoDia != ""){
+      inscripcion.completoDia = '<br>Tu inscripción: ' + inscripcion.completoDia;
+    }else if(inscripcion.completoDiaRetiro != ""){
+      inscripcion.completoDiaRetiro = '<br>Tu inscripción: ' + inscripcion.completoDiaRetiro;
+    }
+    if(inscripcion.diasQueParticipa != ""){
+      inscripcion.diasQueParticipa = ':' + inscripcion.diasQueParticipa + '<br>';
+    } else{
+      inscripcion.diasQueParticipa = inscripcion.diasQueParticipa + '<br>';
+    }
+    
     return inscripcion;
 }
    
