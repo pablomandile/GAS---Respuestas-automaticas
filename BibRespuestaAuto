@@ -38,6 +38,10 @@ function formateoPlanilla(){
     ActiveSheet.insertColumnAfter(ActiveCol+9);
     ActiveSheet.getRange(1, ActiveCol+10).setValue('DatosEvento').setBackground('#CFE2F3');
     ActiveSheet.getRange(2, ActiveCol+10).setBackground('#f5b92c');
+    ActiveSheet.getRange(3, ActiveCol+10).setBackground('#f5b92c');
+    ActiveSheet.insertColumnAfter(ActiveCol+10);
+    ActiveSheet.getRange(1, ActiveCol+11).setValue('Programa').setBackground('#CFE2F3');
+    ActiveSheet.getRange(2, ActiveCol+11).setBackground('#f5b92c');
     var MaxCols = ActiveSheet.getMaxColumns();
     for (var i = 0; i < MaxCols; i++){
       ActiveSheet.autoResizeColumn(i+1);
@@ -271,7 +275,7 @@ function procesoRespuestas(e, TituloEvento){
   } else {
     grabaciones = "";
   }
-  ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK, grabaciones);
+  ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK, grabaciones, ModalidadElegida);
 
   if (infoTKAbono == "SI, me gustaría!"){
     envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
@@ -492,7 +496,7 @@ function buscaCurso(TituloEvento, Pais){
 *** CALCÚLA SI HAY VARIOS LINKS DE VIDEOS Y LOS SEPARA     ***
 *** CALCÚLA SI HAY INVITADOS Y LES ENVÍA OTRO MAIL         ***
 *************************************************************/
-function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK, grabaciones){
+function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK, grabaciones, ModalidadElegida){
   var styleF28 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
   var styleF28White = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#ffffff'>";
   var styleF22 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#3c4043'>";
@@ -528,24 +532,36 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     styleF18 + "<br/>Lugar: " + finStyle + styleF18Blue + "<strong>" + datosEvento.LugarEvento + "</strong>" + finStyle;
   
   var saludoInicial = styleF28 + "¡Hola " + '<strong>' + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + "</strong>!" + finStyle;
-  Logger.log(datosEvento.LinkYoutube); 
+
   separoLinksYoutube();
-  Logger.log(datosEvento.LinkYoutube); 
+
   if (datosEvento.aPagar > 0){
-  ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
-  ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue(datosEvento.LinkYoutube);
-  ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('CH');
-  var nombreEvento = ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).getValue();
-  var datosPlanillaEvento = ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).getValue();
-  if (nombreEvento == ""){
-    ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).setValue(TituloEvento);
-  }
-  if (datosPlanillaEvento == ""){
-    ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
-  }
-  datosEvento.TextoLink = "";
-  datosEvento.AvisoOnline = "";
-  datosEvento.LinkYoutube = "";
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue(datosEvento.LinkYoutube);
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('CH');
+    var nombreEvento = ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).getValue();
+    var datosPlanillaEventoOnl = ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).getValue();
+    var datosPlanillaEventoPre = ActiveSheet.getRange(3, buscoColumna('DatosEvento',sheet)).getValue();
+    var planillaPrograma = ActiveSheet.getRange(2, buscoColumna('Programa',sheet)).getValue();
+    if (nombreEvento == ""){
+      ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).setValue(TituloEvento);
+    }
+    if (datosPlanillaEventoOnl == ""){
+      if(ModalidadElegida == "ONLINE"){
+        ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
+      }
+    }
+    if (datosPlanillaEventoPre == ""){
+      if(ModalidadElegida == "PRESENCIAL"){
+        ActiveSheet.getRange(3, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
+      }
+    } 
+    if (planillaPrograma == ""){
+      ActiveSheet.getRange(2, buscoColumna('Programa',sheet)).setValue(datosEvento.infoPrograma);
+    }
+    datosEvento.TextoLink = "";
+    datosEvento.AvisoOnline = "";
+    datosEvento.LinkYoutube = "";
   }else{
     ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
     ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('NO');
@@ -810,7 +826,10 @@ function envioLinksAConfirmados(){
   var sheet = ActiveSheet.getDataRange().getValues();
   var inscripcion = ActiveSheet.getRange(1, 1, ActiveSheet.getLastRow(),ActiveSheet.getLastColumn()).getValues();
   var tituloEvento = ActiveSheet.getRange(2, buscoColumna('NombreEvento', sheet)).getValue();
-  var datosEvento = ActiveSheet.getRange(2, buscoColumna('DatosEvento', sheet)).getValue();
+  var datosEventoOnline = ActiveSheet.getRange(2, buscoColumna('DatosEvento', sheet)).getValue();
+  var datosEventoPresencial = ActiveSheet.getRange(3, buscoColumna('DatosEvento', sheet)).getValue();
+  var datosEvento = "";
+  var programa = ActiveSheet.getRange(2, buscoColumna('Programa', sheet)).getValue();
   var asunto = 'CONFIRMACIÓN: inscripción a "' + tituloEvento + '" y links de acceso.';
   var pendiente = inscripcion[0].indexOf('Pendiente');  
   var pago = inscripcion[0].indexOf('Pago'); 
@@ -853,10 +872,10 @@ function envioLinksAConfirmados(){
                               datosInscripcion.apellido + "</strong>!" + e.finStyle;
               htmlBody = partesMail.encabezadoMail + saludoInicial + e.styleF22 + datosMail.TextoInicialConfirmado + e.finStyle + 
                           e.styleF22Tab + 'Membresía: ' + e.finStyle + e.styleF22Morado + datosInscripcion.membresia + e.finStyle + '<br>' +
-                          e.styleF18 + datosInscripcion.completoDia + datosInscripcion.completoDiaRetiro + 
-                          " " + datosInscripcion.diasQueParticipa + e.finStyle + 
-                          datosEvento + e.styleF18 + textoAcceso + e.finStyle + e.styleF18Blue + datosInscripcion.linksYoutube + 
-                          e.finStyle + e.styleF22Morado + avisoOnline + e.finStyle +
+                          e.styleF18 + datosInscripcion.completoDia + datosInscripcion.completoDiaRetiro +
+                          " " + datosInscripcion.diasQueParticipa + datosInscripcion.introduccion + e.finStyle + 
+                          datosEvento + e.styleF18 + programa + e.finStyle + e.styleF18 + textoAcceso + e.finStyle + 
+                          e.styleF18Blue + datosInscripcion.linksYoutube + e.finStyle + e.styleF22Morado + avisoOnline + e.finStyle +
                           e.styleF18 + datosMail.Dudas + e.finStyle + partesMail.pieMail;
               envioMail(htmlBody, datosInscripcion.mail, asunto);
               
@@ -874,12 +893,14 @@ function envioLinksAConfirmados(){
     var acceso = '';
     if(datosInscripcion.modalidad == 'ONLINE'){
         acceso = datosMail.infoAccesoOnlineLINK;
+        datosEvento = datosEventoOnline;
     } else if(datosInscripcion.modalidad == 'PRESENCIAL'){
         acceso = datosMail.infoAccesoPresencial;
+        datosEvento = datosEventoPresencial;
     }
     return acceso;
   }
-
+//¿PARTICIPARÁS DE LA INTRODUCCIÓN EL VIERNES? (GRATIS)
   function traigoDatosParticipante(index){
     index = index + 1 ;
     var inscripcion = {
@@ -889,6 +910,7 @@ function envioLinksAConfirmados(){
       mail: (buscoColumna('Dirección de correo electrónico',sheet) != 0) ? valorPlanilla('Dirección de correo electrónico', index) : "",
       membresia: (buscoColumna('Membresía',sheet) != 0) ? valorPlanilla('Membresía', index) : "",
       linksYoutube: (buscoColumna('Links Youtube',sheet) != 0) ? valorPlanilla('Links Youtube', index) : "",
+      introduccion: (buscoColumna('¿PARTICIPARÁS DE LA INTRODUCCIÓN EL VIERNES? (GRATIS)',sheet) != 0) ? valorPlanilla('¿PARTICIPARÁS DE LA INTRODUCCIÓN EL VIERNES? (GRATIS)', index) : "",
       completoDia: (buscoColumna('PODÉS SUMARTE AL EVENTO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',sheet) != 0) ? valorPlanilla('PODÉS SUMARTE AL EVENTO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:', index) : "",
       completoDiaRetiro: (buscoColumna('PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',sheet) != 0) ? valorPlanilla('PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:', index) : "",
       
@@ -900,9 +922,12 @@ function envioLinksAConfirmados(){
       inscripcion.completoDiaRetiro = '<br>Tu inscripción: ' + inscripcion.completoDiaRetiro;
     }
     if(inscripcion.diasQueParticipa != ""){
-      inscripcion.diasQueParticipa = ':' + inscripcion.diasQueParticipa + '<br>';
+      inscripcion.diasQueParticipa = ': ' + inscripcion.diasQueParticipa;
+    }
+    if(inscripcion.introduccion != ""){
+      inscripcion.introduccion = ' + INTRODUCCIÓN VIERNES <br>';
     } else{
-      inscripcion.diasQueParticipa = inscripcion.diasQueParticipa + '<br>';
+      inscripcion.introduccion = '<br>';
     }
     
     return inscripcion;
