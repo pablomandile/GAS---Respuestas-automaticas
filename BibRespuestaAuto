@@ -583,9 +583,13 @@ Logger.log(datosEvento.LinkYoutube);
     if (vinculosYoutube.length > 1) {
       datosEvento.LinkYoutube = "";
       vinculosYoutube.forEach( function(valor, indice, array) {
-      datosEvento.LinkYoutube += "<P><strong> Sesión " + (indice+1) + ": </strong><a href='" + vinculosYoutube[indice] + "'>" + 
-                                  vinculosYoutube[indice] + "</a></p>";
+        if(vinculosYoutube[indice] != ""){
+          datosEvento.LinkYoutube += "<P><strong> Sesión " + (indice+1) +
+                                      ": </strong><a href='" + vinculosYoutube[indice] + "'>" + 
+                                      vinculosYoutube[indice] + "</a></p>";
+        }
       });
+
     } else{
       datosEvento.LinkYoutube = "<a href='" + datosEvento.LinkYoutube + "'>" + datosEvento.LinkYoutube + "</a>";
     }
@@ -643,7 +647,7 @@ function verificarModalidad(ModalidadElegida, datosEvento){
       datosEvento.LugarEvento = "Serrano 1316, PALERMO";
     break;
     case "ONLINE":
-      if (datosEvento.LinkYoutube != ""){
+      if (datosEvento.aPagar == 0){
       infoAcceso = "infoAccesoOnlineLINK";
       } else {
         if(datosEvento.Tipo == "Meditación para Niños"){
@@ -853,7 +857,7 @@ function envioLinksAConfirmados(){
                           datosEvento + e.styleF18 + textoAcceso + e.finStyle + e.styleF18Blue + datosInscripcion.linksYoutube + 
                           e.finStyle + e.styleF22Morado + avisoOnline + e.finStyle +
                           e.styleF18 + datosMail.Dudas + e.finStyle + partesMail.pieMail;
-              // envioMail(htmlBody, datosInscripcion.mail, asunto);
+              envioMail(htmlBody, datosInscripcion.mail, asunto);
               
               ActiveSheet.getRange(i+1, buscoColumna('Confirmación', sheet)).setValue('ENVIADA').setBackground('#67ad63').setFontColor('white');
               correos += 1;
