@@ -1,4 +1,4 @@
-# Google Apps Script - Respuestas automáticas
+# Google Apps Script - Proceso de inscripción y espuestas automáticas
 Proceso la inscripción eventos a través de Google Forms.
 
 Eventos cubiertos:
