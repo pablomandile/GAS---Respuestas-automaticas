@@ -1,4 +1,4 @@
-# GAS---Respu-stas-autom-ticas
+# Google Apps Script - Respuestas automáticas
 Proceso la inscripción eventos a través de Google Forms.
 
 Eventos cubiertos:
