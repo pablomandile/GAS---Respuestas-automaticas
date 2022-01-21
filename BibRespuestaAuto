@@ -88,7 +88,7 @@ function procesoRespuestas(e, TituloEvento){
   var completarDatos = false;
   var infoTKAbono = (buscoColumna(Preguntas.infoTKAB,sheet) != 0) ? valorPlanilla(Preguntas.infoTKAB) : "";
   var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "ARGENTINA";
-  var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "ONLINE";
+  var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "PRESENCIAL";
   Nombre = (buscoColumna(Preguntas.nombre,sheet) != 0) ? valorPlanilla(Preguntas.nombre) : "";
   if (Nombre == "") {
     Nombre = (buscoColumna(Preguntas.nombreAdulto,sheet) != 0) ? valorPlanilla(Preguntas.nombreAdulto) : "";
@@ -184,23 +184,35 @@ function procesoRespuestas(e, TituloEvento){
       case 'TK CLASES (Antes llamada ABONO MENSUAL)':
         datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
         datosEvento.botonPago = datosEvento.BotondePagoAbono;
+        if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+          datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+        }
+        
       break;
       case 'TK CORAZÓN':
         if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
             datosEvento.aPagar = (datosEvento.Valor1DiaTKCOR != "") ? datosEvento.Valor1DiaTKCOR : "0";
             datosEvento.botonPago = datosEvento.BotondePago1DiaTKCOR;
+            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
         } else{
             datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
             datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
+            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+            } 
         }
       break; 
       case 'TK BENEFACTOR':
         if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
             datosEvento.aPagar = (datosEvento.Valor1DiaTKBEN != "") ? datosEvento.Valor1DiaTKBEN : "0";
             datosEvento.botonPago = datosEvento.BotondePago1DiaTKBEN;
+            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
         } else{
             datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
             datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
+            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+            } 
         }
       break; 
       case 'TK CORAZÓN-UY':
@@ -210,12 +222,16 @@ function procesoRespuestas(e, TituloEvento){
             datosEvento.ValorEvento = datosEvento.ValorDolares;
             datosEvento.Moneda = "USD";
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
+            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
         } else{
             datosEvento.aPagar = (datosEvento.ValorDolTKCOR != "") ? datosEvento.ValorDolTKCOR : "0";
             datosEvento.botonPago = datosEvento.BotonPagoDolTKCOR;
             datosEvento.ValorEvento = datosEvento.ValorDolares;
             datosEvento.Moneda = "USD";
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
+            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+            } 
         }
       break; 
         case 'TK BENEFACTOR-UY':
@@ -225,12 +241,16 @@ function procesoRespuestas(e, TituloEvento){
             datosEvento.ValorEvento = datosEvento.ValorDolares;
             datosEvento.Moneda = "USD";
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
+            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
         } else{
             datosEvento.aPagar = (datosEvento.ValorDolares != "") ? datosEvento.ValorDolares : "0";
             datosEvento.botonPago = datosEvento.BotonPagoDolares;
             datosEvento.ValorEvento = datosEvento.ValorDolares;
             datosEvento.Moneda = "USD";
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
+            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+            } 
         }
       break; 
       case 'SIN MEMBRESIA':
@@ -243,13 +263,16 @@ function procesoRespuestas(e, TituloEvento){
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
             datosEvento.aPagar = (datosEvento.ValorDol1Dia != "") ? datosEvento.ValorDol1Dia : "0";
             datosEvento.botonPago = datosEvento.BotonPagoDolares1Dia;
-
+            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
         } else{
             datosEvento.ValorEvento = datosEvento.ValorDolares;
             datosEvento.Moneda = "USD";
             datosEvento.aPagar = datosEvento.ValorEvento;
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
             datosEvento.botonPago = datosEvento.BotonPagoDolares;
+            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+            } 
         }
       break;
       default:
@@ -341,19 +364,17 @@ function CargoDatosMail(){
 
   //Retorno resultados en array associativo
       var infMail = {
-        botonPagoAbono:valorPlanilla('botonPagoAbono'), 
         TextoInicial:valorPlanilla('TextoInicial'),
         TextoInicialConfirmado:valorPlanilla('TextoInicialConfirmado'), 
         infoAccesoOnline:valorPlanilla('infoAccesoOnline'),
         infoAccesoPresencial:valorPlanilla('infoAccesoPresencial'),
+        infoAccesoPresencialSinLink:valorPlanilla('infoAccesoPresencialSinLink'),
         infoAccesoOnlineLINK:valorPlanilla('infoAccesoOnlineLINK'),
         infoAccesoMeditacionChicos:valorPlanilla('infoAccesoMeditacionChicos'),
-        Abono:valorPlanilla('Abono'),
         Saludo:valorPlanilla('Saludo'),
         Dudas:valorPlanilla('Dudas'),
         PagoTransfer:valorPlanilla('pagoTransfer'),
         infoAccesoPreceptos:valorPlanilla('Preceptos'),
-        ValorAbono:valorPlanilla('ValorAbono'),
         envioInfoTK:valorPlanilla('envioInfoTK'),
         infoPagoPaypal:valorPlanilla('infoPagoPaypal'),
         errorEnMembresia1:valorPlanilla('errorEnMembresia1'),
@@ -432,7 +453,8 @@ function buscaCurso(TituloEvento, Pais){
         HoraEvento:valorPlanilla('Hora'), 
         Tipo:valorPlanilla('Tipo'),
         Disponibilidad:valorPlanilla('Disponibilidad'), 
-        LugarEvento:valorPlanilla('Lugar'), 
+        LugarEvento:valorPlanilla('Lugar'),
+        Modalidad:valorPlanilla('Modalidad'),
         NombreUsuario: "",
         ApellidoUsuario: "",
         MailUsuario:"",
@@ -545,7 +567,11 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     separoLinksYoutube();
   }
 
-  if (datosEvento.aPagar > 0){
+  if (datosEvento.aPagar > 0){    
+    if(datosEvento.Modalidad == "PRESENCIALMENTE"){
+      datosEvento.LinkYoutube = "";
+      datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
+    }
     ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
     ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue(datosEvento.LinkYoutube);
     ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('CH');
@@ -575,6 +601,12 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
   }else{
     ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
     ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('NO');
+    if(datosEvento.Modalidad == "PRESENCIALMENTE"){
+    datosEvento.TextoLink = "";
+    datosEvento.AvisoOnline = "";
+    datosEvento.LinkYoutube = "";
+    datosEvento.infoAcceso = datosEvento.infoAccesoPresencialSinLink;
+    }
   }
   var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
     styleF22Tab + 'Membresía: ' + finStyle + styleF22Morado + tieneTK + '<br>' + finStyle +
