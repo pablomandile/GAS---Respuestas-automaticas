@@ -182,18 +182,19 @@ function procesoRespuestas(e, TituloEvento){
   if (chequeoTKS){
     switch (tieneTK)  {
       case 'TK CLASES (Antes llamada ABONO MENSUAL)':
+      // NO HAY DESCUENTO POR TK CLASES - VALOR GENERAL
         datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
         datosEvento.botonPago = datosEvento.BotondePagoAbono;
         if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
           datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
         }
-        
       break;
       case 'TK CORAZÓN':
         if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
             datosEvento.aPagar = (datosEvento.Valor1DiaTKCOR != "") ? datosEvento.Valor1DiaTKCOR : "0";
             datosEvento.botonPago = datosEvento.BotondePago1DiaTKCOR;
             datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
+            celebracionIniciacionSabado();
         } else{
             datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
             datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
@@ -207,6 +208,7 @@ function procesoRespuestas(e, TituloEvento){
             datosEvento.aPagar = (datosEvento.Valor1DiaTKBEN != "") ? datosEvento.Valor1DiaTKBEN : "0";
             datosEvento.botonPago = datosEvento.BotondePago1DiaTKBEN;
             datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
+            celebracionIniciacionSabado();
         } else{
             datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
             datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
@@ -223,6 +225,7 @@ function procesoRespuestas(e, TituloEvento){
             datosEvento.Moneda = "USD";
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
             datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
+            celebracionIniciacionSabado();
         } else{
             datosEvento.aPagar = (datosEvento.ValorDolTKCOR != "") ? datosEvento.ValorDolTKCOR : "0";
             datosEvento.botonPago = datosEvento.BotonPagoDolTKCOR;
@@ -242,6 +245,7 @@ function procesoRespuestas(e, TituloEvento){
             datosEvento.Moneda = "USD";
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
             datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
+            celebracionIniciacionSabado();
         } else{
             datosEvento.aPagar = (datosEvento.ValorDolares != "") ? datosEvento.ValorDolares : "0";
             datosEvento.botonPago = datosEvento.BotonPagoDolares;
@@ -264,6 +268,7 @@ function procesoRespuestas(e, TituloEvento){
             datosEvento.aPagar = (datosEvento.ValorDol1Dia != "") ? datosEvento.ValorDol1Dia : "0";
             datosEvento.botonPago = datosEvento.BotonPagoDolares1Dia;
             datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
+            celebracionIniciacionSabado();
         } else{
             datosEvento.ValorEvento = datosEvento.ValorDolares;
             datosEvento.Moneda = "USD";
@@ -278,6 +283,12 @@ function procesoRespuestas(e, TituloEvento){
       default:
       break;
     }  
+  }
+  function celebracionIniciacionSabado(){
+    if(datosEvento.Tipo = "Celebración"){
+              datosEvento.LinkYoutubePrograma = "";
+              datosEvento.LinkYoutube = datosEvento.LinkYoutubeDiaSABADO;
+    }
   }
 
   if (datosEvento.Tipo == "Preceptos"){
@@ -563,7 +574,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     datosEvento.LinkYoutubePrograma = "";
   }else if(datosEvento.LinkYoutubePrograma != ""){
     datosEvento.LinkYoutube = datosEvento.LinkYoutubePrograma;
-  }else {
+  }else if(datosEvento.Tipo != "Celebración") {
     separoLinksYoutube();
   }
 
