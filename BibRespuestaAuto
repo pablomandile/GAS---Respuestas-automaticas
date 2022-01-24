@@ -659,7 +659,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     var vinculosYoutube = datosEvento.LinkYoutube.split(";");
     if (vinculosYoutube.length > 1) {
       datosEvento.LinkYoutube = "";
-      vinculosYoutube.forEach( function(indice) {
+      vinculosYoutube.forEach( function(value, indice, array) {
         if(vinculosYoutube[indice] != ""){
           datosEvento.LinkYoutube += "<P><strong> Sesión " + (indice+1) +
                                       ": </strong><a href='" + vinculosYoutube[indice] + "'>" + 
