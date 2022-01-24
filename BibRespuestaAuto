@@ -14,7 +14,7 @@ function formateoPlanilla(){
   var ActiveCol = ActiveSheet.getLastColumn();
   var sheet = ActiveSheet.getDataRange().getValues();
   var colTemporal = "";
-  colTemporal = sheet[0].indexOf('DatosEvento')+1;  
+  colTemporal = sheet[0].indexOf('Asistencia')+1;  
   if (colTemporal == 0){
     var MaxCols = ActiveSheet.getMaxColumns();
     for (var i = 0; i < MaxCols; i++){
@@ -43,7 +43,15 @@ function formateoPlanilla(){
     ActiveSheet.getRange(1, ActiveCol+10).setValue('DatosEvento').setBackground('#CFE2F3');
     ActiveSheet.insertColumnAfter(ActiveCol+10);
     ActiveSheet.getRange(1, ActiveCol+11).setValue('Programa').setBackground('#CFE2F3');
+    ActiveSheet.insertColumnAfter(ActiveCol+11);
+    ActiveSheet.getRange(1, ActiveCol+12).setValue('FechaPago').setBackground('#CFE2F3');
     MaxCols = ActiveSheet.getMaxColumns();
+    ActiveSheet.insertColumnAfter(ActiveCol+12);
+    ActiveSheet.getRange(1, ActiveCol+13).setValue('Valor').setBackground('#CFE2F3');
+    ActiveSheet.insertColumnAfter(ActiveCol+13);
+    ActiveSheet.getRange(1, ActiveCol+14).setValue('Forma').setBackground('#CFE2F3');
+    ActiveSheet.insertColumnAfter(ActiveCol+14);
+    ActiveSheet.getRange(1, ActiveCol+15).setValue('Asistencia').setBackground('#CFE2F3');
     for (var i = 0; i < MaxCols; i++){
       ActiveSheet.autoResizeColumn(i+1);
     }
