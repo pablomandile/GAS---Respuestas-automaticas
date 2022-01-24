@@ -1,0 +1,23 @@
+function onOpen(e) {
+  SpreadsheetApp.getUi() // Or DocumentApp, SlidesApp, or FormApp.
+    .createMenu('Menu CMKA')
+    .addItem('Ver respuestas disponibles', 'verificoCuotaMails')
+    .addToUi();
+}
+
+function verificoCuotaMails(){
+  var emailQuotaRemaining = MailApp.getRemainingDailyQuota();
+  var ss = SpreadsheetApp.openById("1xDCPiYOO_JpGEGE_t2FDSt0b5iF9fgXImjcYylD1Jn4");
+  var sheetDatosMail = ss.getSheetByName('Calculo de cantidad de respuestas');
+  var date = new Date();
+  var timeStamp = new Date();
+  var fechaActual = (date.toLocaleString('es-AR', {
+    day: 'numeric', // numeric, 2-digit
+    //year: 'numeric', // numeric, 2-digit
+    month: 'long', // numeric, 2-digit, long, short, narrow
+    // hour: 'numeric', // numeric, 2-digit
+    // minute: 'numeric', // numeric, 2-digit
+    // second: 'numeric', // numeric, 2-digit
+  }));
+  sheetDatosMail.getRange(3, 1).setValue(fechaActual + ":     " + emailQuotaRemaining);
+}
