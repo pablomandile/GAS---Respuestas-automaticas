@@ -317,7 +317,7 @@ function procesoRespuestas(e, TituloEvento){
   } else {
     grabaciones = "";
   }
-  ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK, grabaciones, ModalidadElegida);
+  var seEnvioMail = ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK, grabaciones, ModalidadElegida);
 
   if (infoTKAbono == "SI, me gustaría!"){
     envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
@@ -330,7 +330,7 @@ function procesoRespuestas(e, TituloEvento){
   }
   ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
   datosEvento.aPagar).setHorizontalAlignment('right');
-  ActiveSheet.getRange(ActiveRow, buscoColumna('Respuesta',sheet)).setValue("ENVIADA").setBackground('#67ad63').setFontColor('white');
+  ActiveSheet.getRange(ActiveRow, buscoColumna('Respuesta',sheet)).setValue(seEnvioMail).setBackground('#67ad63').setFontColor('white');
   ActiveSheet.getRange(ActiveRow, 1).setBackground('#b3d1ff');
   SpreadsheetApp.flush();
   function valorPlanilla(valCampo){
@@ -638,32 +638,35 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     datosEvento.TextoLink = "";
     ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
   }
+  var mailEnviar = verificoCuotaMails();
+  if(mailEnviar == "ENVIADA"){
+    var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
+      styleF22Tab + 'Membresía: ' + finStyle + styleF22Morado + tieneTK + '<br>' + finStyle +
+      styleF22Morado + datosEvento.textoInscPorDia + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
+      styleF22 + datosEvento.textoErrorMembresia + finStyle + styleF22Tab + grabaciones + finStyle +
+      styleF22 + datosEvento.pagoTransfer + finStyle + 
+      DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF22Morado + datosEvento.webDelEvento + finStyle +
+      styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + datosEvento.TextoLink + finStyle + 
+      styleF18Blue + datosEvento.LinkYoutube + finStyle + styleF22Morado + datosEvento.AvisoOnline + finStyle +
+      styleF18 + datosMail.Dudas + finStyle + inicioPieMail + finPieMail;
 
-  var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
-    styleF22Tab + 'Membresía: ' + finStyle + styleF22Morado + tieneTK + '<br>' + finStyle +
-    styleF22Morado + datosEvento.textoInscPorDia + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
-    styleF22 + datosEvento.textoErrorMembresia + finStyle + styleF22Tab + grabaciones + finStyle +
-    styleF22 + datosEvento.pagoTransfer + finStyle + 
-    DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF22Morado + datosEvento.webDelEvento + finStyle +
-    styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + datosEvento.TextoLink + finStyle + 
-    styleF18Blue + datosEvento.LinkYoutube + finStyle + styleF22Morado + datosEvento.AvisoOnline + finStyle +
-    styleF18 + datosMail.Dudas + finStyle + inicioPieMail + finPieMail;
+    // More info for Advanced Options Parameters 
+    // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
+    var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+    MailApp.sendEmail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
 
-  // More info for Advanced Options Parameters 
-  // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
-  var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
-  MailApp.sendEmail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
-
-  if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
-    var htmlBodyinvitado =  encabezadoMail + "¡Hola " + "<strong>" +
-    claseInvitacion.invitadoNombre + "</strong>" + "!" + "<br/><br/>Te contamos que " 
-    + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + " te invitó a una clase de meditación <br/>" + 
-    " por el día del amigo! <br/>" + "<br/><br/><strong>INFORMACIÓN IMPORTANTE: </strong><br/>" +
-    DatosEvento + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
-    datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + datosMail.Saludo + finPieMail;
-    var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBodyinvitado};
-    MailApp.sendEmail(claseInvitacion.invitadoMail, claseInvitacion.invitadoSubject, emailBody, advancedOpts);
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Dirección de correo electrónico INVITADO/A',sheet)).setBackground('green').setFontColor('white');
+    if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
+      var htmlBodyinvitado =  encabezadoMail + "¡Hola " + "<strong>" +
+      claseInvitacion.invitadoNombre + "</strong>" + "!" + "<br/><br/>Te contamos que " 
+      + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + " te invitó a una clase de meditación <br/>" + 
+      " por el día del amigo! <br/>" + "<br/><br/><strong>INFORMACIÓN IMPORTANTE: </strong><br/>" +
+      DatosEvento + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
+      datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + datosMail.Saludo + finPieMail;
+      var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBodyinvitado};
+      MailApp.sendEmail(claseInvitacion.invitadoMail, claseInvitacion.invitadoSubject, emailBody, advancedOpts);
+      ActiveSheet.getRange(ActiveRow, buscoColumna('Dirección de correo electrónico INVITADO/A',sheet))
+      .setBackground('green').setFontColor('white');
+    }
   }
   
   // SI HAY MÁS DE UN VÍNCULO DE YOUTUBE LOS SEPARO EN PARTES CON SUS VÍNCULOS
@@ -682,6 +685,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
       datosEvento.LinkYoutube = "<a href='" + datosEvento.LinkYoutube + "'>" + datosEvento.LinkYoutube + "</a>";
     }
   }
+  return mailEnviar;
 }
 
 /*************************************************************
@@ -771,20 +775,25 @@ function buscoColumna(Campo, sheet){
 *** BENEFICIOS DE LAS TKS SE LE ENVÍA UN MAIL ADICIONAL     ***
 **************************************************************/
 function envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail){
-  var saludoInfo = "<br/>Espero que estés muy bien.<br/><br/>Muchas gracias por tu interés en nuestras actividades.<br/>";  
-  subject = "Información solicitada sobre Tarjetas Kadampa";
-  var LineaInscripcionTK = datosMail.envioInfoTK;
-  envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, mail, subject);
+  var mailRestantes = verificoCuotaMails();
+  if(mailRestantes == "ENVIADA"){
+    var saludoInfo = "<br/>Espero que estés muy bien.<br/><br/>Muchas gracias por tu interés en nuestras actividades.<br/>";  
+    subject = "Información solicitada sobre Tarjetas Kadampa";
+    var LineaInscripcionTK = datosMail.envioInfoTK;
+    envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, mail, subject);
 
-  function envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, mail, subject){
-    var emailBody ="";
-    var htmlBody =  "¡Hola <font color=\"green\"><strong>" + Nombre + " " + Apellido + "</strong></font>" + "!" + saludoInfo +
-    LineaInscripcionTK + datosMail.Saludo;
-    var advancedOpts = { name: "INFORMACIÓN - CMKA", htmlBody: htmlBody};
-    MailApp.sendEmail(mail, subject, emailBody, advancedOpts);
+    function envioMail(Nombre, Apellido, saludoInfo, LineaInscripcionTK, mail, subject){
+      var emailBody ="";
+      var htmlBody =  "¡Hola <font color=\"green\"><strong>" + Nombre + " " + Apellido + "</strong></font>" + "!" + saludoInfo +
+      LineaInscripcionTK + datosMail.Saludo;
+      var advancedOpts = { name: "INFORMACIÓN - CMKA", htmlBody: htmlBody};
+      MailApp.sendEmail(mail, subject, emailBody, advancedOpts);
+    }
+    colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
+    ActiveSheet.getRange(ActiveRow, colTemporal).setValue(mailRestantes).setBackground('#67ad63').setFontColor('white');
+  } else {
+      ActiveSheet.getRange(ActiveRow, colTemporal).setValue(mailRestantes).setBackground('#67ad63').setFontColor('white');
   }
-  colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
-  ActiveSheet.getRange(ActiveRow, colTemporal).setValue("ENVIADA").setBackground('#67ad63').setFontColor('white');
 }
 
 /**************************************************************
@@ -1097,6 +1106,50 @@ function encabezadoyPieMail(datosMail){
       e.styleF28White + datosMail.Saludo + e.finStyle + "</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>",
   }
   return partesMail;
+}
+
+function traigoDatosCursos(){
+    var tituloEvento = "Reto 21 días de meditación";
+    var ss = SpreadsheetApp.openById("1zVvWhDAfTVPZUkXxnb5qntpkRSWTDT8KoSF7QZYlRwE");
+    var sheetDatosCursos = ss.getSheetByName("Cursos");
+    var DC = sheetDatosCursos.getDataRange().getValues();
+    var datosCursos = sheetDatosCursos.getRange(2, 1, sheetDatosCursos.getLastRow(),sheetDatosCursos.getLastColumn()).getValues();
+
+    for(var i = 0;i<datosCursos.length; i++){
+      if(datosCursos[i][0] == tituloEvento){
+        var infoPlanillaCurso = {
+            fechaEvento:valorPlanillaC('Fecha', i, DC), 
+            horaEvento:valorPlanillaC('Hora', i, DC), 
+            tipo:valorPlanillaC('Tipo', i, DC),
+            disponibilidad:valorPlanillaC('Disponibilidad', i, DC), 
+            lugarEvento:valorPlanillaC('Lugar', i, DC),
+            programa: valorPlanillaC('Programa', i, DC),
+            asunto: 'CONFIRMACIÓN: inscripción a "' + tituloEvento + '" y links de acceso.'
+        }
+      }
+    }
+
+    Logger.log(infoPlanillaCurso.fechaEvento);
+    Logger.log(infoPlanillaCurso.horaEvento);
+    Logger.log(infoPlanillaCurso.lugarEvento);
+    Logger.log(infoPlanillaCurso.tipo);
+    Logger.log(infoPlanillaCurso.disponibilidad);
+    Logger.log(infoPlanillaCurso.asunto);
+    Logger.log(infoPlanillaCurso.programa);
+    return infoPlanillaCurso;
+    function valorPlanillaC(valCampo, i, planilla){
+      return sheetDatosCursos.getRange(i, buscoColumna(valCampo, planilla)).getValue();
+    }
+  }
+  function verificoCuotaMails(){
+  var emailQuotaRemaining = MailApp.getRemainingDailyQuota();
+  var envioRespuesta = "";
+  if(emailQuotaRemaining > 0){
+    envioRespuesta = "ENVIADA"
+  }else{
+    envioRespuesta = "NO ENVIADA"
+  }
+  return envioRespuesta;
 }
 /**************************************************************
 *** AGREGAR EL SIGUIENTE BLOQUE DE CÓDIGO EN EL APPS SCRIPT ***
