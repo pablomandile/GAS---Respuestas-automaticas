@@ -7,7 +7,6 @@ function formateoPlanilla(){
   // Add a custom menu to the spreadsheet.
   SpreadsheetApp.getUi() // Or DocumentApp, SlidesApp, or FormApp.
       .createMenu('Menu CMKA')
-      .addItem('Recordatorio de Pago', 'menuItem1')
       .addItem('Envío Links a Confirmados', 'BibRespuestaAuto.envioLinksAConfirmados')
       .addToUi();
   var ActiveSheet = SpreadsheetApp.getActiveSheet();
@@ -83,7 +82,7 @@ function procesoRespuestas(e, TituloEvento){
             mail : 'Dirección de correo electrónico',
             mailTK : 'Dirección de correo electrónico TK',
             invitadoNombre : 'NOMBRE Y APELLIDO DEL INVITADO/A',
-            tarjetasyabono: '¿TENÉS ALGUNA DE NUESTRAS TARJETAS KADAMPAS?',
+            tarjetasyabono: '¿TENÉS ALGUNA DE NUESTRAS TARJETAS KADAMPA?',
             invitadoMail : 'Dirección de correo electrónico INVITADO/A',
             grabaciones: '¿Te gustaría adquirir las GRABACIONES de las enseñanzas recibidas durante el evento?',
             eventoPorDias : 'PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',
@@ -513,6 +512,7 @@ function buscaCurso(TituloEvento, Pais){
         cantDiasElegidos : 0,
         textoInscPorDia : "",
         textoErrorMembresia: "",
+        webDelEvento: valorPlanilla('WEB del Evento'),
         LinkYoutube: valorPlanilla('LinkYoutube'),
         LinkYoutubePrograma: valorPlanilla('LinkYoutube Programa'),
         LinkYoutubeDias:"",
@@ -590,6 +590,10 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     if(datosEvento.Modalidad == "PRESENCIALMENTE"){
       datosEvento.LinkYoutube = "";
       datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
+      ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
+    }
+    if(datosEvento.Tipo == "Reto 21 dias"){
+      datosEvento.webDelEvento = "";
     }
     ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
     ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue(datosEvento.LinkYoutube);
@@ -624,16 +628,24 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     datosEvento.TextoLink = "";
     datosEvento.AvisoOnline = "";
     datosEvento.LinkYoutube = "";
-    datosEvento.infoAcceso = datosEvento.infoAccesoPresencialSinLink;
+    datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
     }
   }
+  if(datosEvento.Tipo == "Reto 21 dias"){
+    datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
+    datosEvento.AvisoOnline = "";
+    datosEvento.TextoLink = "";
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
+  }
+
   var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
     styleF22Tab + 'Membresía: ' + finStyle + styleF22Morado + tieneTK + '<br>' + finStyle +
     styleF22Morado + datosEvento.textoInscPorDia + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
     styleF22 + datosEvento.textoErrorMembresia + finStyle + styleF22Tab + grabaciones + finStyle +
     styleF22 + datosEvento.pagoTransfer + finStyle + 
-    DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + 
-    datosEvento.TextoLink + finStyle + 
+    DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF22Morado + datosEvento.webDelEvento + finStyle +
+    styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + datosEvento.TextoLink + finStyle + 
     styleF18Blue + datosEvento.LinkYoutube + finStyle + styleF22Morado + datosEvento.AvisoOnline + finStyle +
     styleF18 + datosMail.Dudas + finStyle + inicioPieMail + finPieMail;
 
@@ -878,6 +890,7 @@ function envioLinksAConfirmados(){
   var textoAcceso = "";
   var datosInscripcion = {};
   var datosMail = {};
+  var datosCurso = {};
   var partesMail = {};
   var htmlBody = "";
   var saludoInicial = "";
@@ -925,8 +938,13 @@ function envioLinksAConfirmados(){
           if(textoPago == 'OK'){
             if(inscripcion[i][confirmacion] == ''){
               datosInscripcion = traigoDatosParticipante(i);
+              datosCurso = traigoDatosCursos(tituloEvento);
               datosMail = CargoDatosMail();
               textoAcceso = chModalidad();
+              if(datosCurso.tipo == "Reto 21 dias"){
+                avisoOnline = "";
+                textoAcceso = datosMail.infoAccesoPresencialSinLink;
+              }
               partesMail = encabezadoyPieMail(datosMail);
               saludoInicial = e.styleF28 + "¡Hola " + '<strong>' + datosInscripcion.nombre  + " " + 
                               datosInscripcion.apellido + "</strong>!" + e.finStyle;
@@ -934,7 +952,8 @@ function envioLinksAConfirmados(){
                           e.styleF22Tab + 'Membresía: ' + e.finStyle + e.styleF22Morado + datosInscripcion.membresia + e.finStyle + '<br>' +
                           e.styleF18 + datosInscripcion.completoDia + datosInscripcion.completoDiaRetiro +
                           " " + datosInscripcion.diasQueParticipa + datosInscripcion.introduccion + e.finStyle + 
-                          datosEvento + e.styleF18 + programa + e.finStyle + e.styleF18 + textoAcceso + e.finStyle + 
+                          datosEvento + e.styleF18 + programa + e.finStyle + e.styleF22Morado + datosCurso.webDelEvento +
+                          e.finStyle + e.styleF18 + textoAcceso + e.finStyle + 
                           e.styleF18Blue + datosInscripcion.linksYoutube + e.finStyle + e.styleF22Morado + avisoOnline + e.finStyle +
                           e.styleF18 + datosMail.Dudas + e.finStyle + partesMail.pieMail;
               envioMail(htmlBody, datosInscripcion.mail, asunto);
@@ -949,6 +968,33 @@ function envioLinksAConfirmados(){
     return correos;
   }
 
+  function traigoDatosCursos(tituloEvento){
+    var ss = SpreadsheetApp.openById("1zVvWhDAfTVPZUkXxnb5qntpkRSWTDT8KoSF7QZYlRwE");
+    var sheetDatosCursos = ss.getSheetByName("Cursos");
+    var DC = sheetDatosCursos.getDataRange().getValues();
+    var datosCursos = sheetDatosCursos.getRange(2, 1, sheetDatosCursos.getLastRow(),sheetDatosCursos.getLastColumn()).getValues();
+
+    for(var i = 0;i<datosCursos.length; i++){
+      if(datosCursos[i][0] == tituloEvento){
+        var infoPlanillaCurso = {
+            fechaEvento:valorPlanillaC('Fecha', i, DC), 
+            horaEvento:valorPlanillaC('Hora', i, DC), 
+            tipo:valorPlanillaC('Tipo', i, DC),
+            disponibilidad:valorPlanillaC('Disponibilidad', i, DC), 
+            lugarEvento:valorPlanillaC('Lugar', i, DC),
+            programa: valorPlanillaC('Programa', i, DC),
+            webDelEvento: valorPlanillaC('WEB del Evento', i, DC),
+            asunto: 'CONFIRMACIÓN: inscripción a "' + tituloEvento + '" y links de acceso.'
+        }
+      }
+    }
+    return infoPlanillaCurso;
+    function valorPlanillaC(valCampo, i, planilla){
+      i +=2;
+      return sheetDatosCursos.getRange(i, buscoColumna(valCampo, planilla)).getValue();
+    }
+  }
+
   function chModalidad(){
     var acceso = '';
     if(datosInscripcion.modalidad == 'ONLINE'){
@@ -957,9 +1003,13 @@ function envioLinksAConfirmados(){
     } else if(datosInscripcion.modalidad == 'PRESENCIAL'){
         acceso = datosMail.infoAccesoPresencial;
         datosEvento = datosEventoPresencial;
+    } else{
+      acceso = datosMail.infoAccesoPresencial;
+      datosEvento = datosEventoPresencial;
     }
     return acceso;
   }
+  
 //¿PARTICIPARÁS DE LA INTRODUCCIÓN EL VIERNES? (GRATIS)
   function traigoDatosParticipante(index){
     index = index + 1 ;
