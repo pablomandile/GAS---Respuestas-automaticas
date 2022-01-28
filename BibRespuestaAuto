@@ -332,7 +332,12 @@ function procesoRespuestas(e, TituloEvento){
   }
   ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
   datosEvento.aPagar).setHorizontalAlignment('right');
-  ActiveSheet.getRange(ActiveRow, buscoColumna('Respuesta',sheet)).setValue(seEnvioMail).setBackground('#67ad63').setFontColor('white');
+  if(seEnvioMail == 'ENVIADA'){
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Respuesta',sheet)).setValue(seEnvioMail).setBackground('#67ad63').setFontColor('white');
+  } else{
+    ActiveSheet.getRange(ActiveRow, buscoColumna('Respuesta',sheet)).setValue(seEnvioMail).setBackground('#f02e61').setFontColor('white');
+  }
+  
   ActiveSheet.getRange(ActiveRow, 1).setBackground('#b3d1ff');
   SpreadsheetApp.flush();
   function valorPlanilla(valCampo){
@@ -794,7 +799,7 @@ function envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Ape
     colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
     ActiveSheet.getRange(ActiveRow, colTemporal).setValue(mailRestantes).setBackground('#67ad63').setFontColor('white');
   } else {
-      ActiveSheet.getRange(ActiveRow, colTemporal).setValue(mailRestantes).setBackground('#67ad63').setFontColor('white');
+      ActiveSheet.getRange(ActiveRow, colTemporal).setValue(mailRestantes).setBackground('#f02e61').setFontColor('white');
   }
 }
 
