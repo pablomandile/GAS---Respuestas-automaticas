@@ -246,7 +246,7 @@ function procesoRespuestas(e, TituloEvento){
             } 
         }
       break; 
-        case 'TK BENEFACTOR-UY':
+      case 'TK BENEFACTOR-UY':
         if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
             datosEvento.aPagar = (datosEvento.ValorDol1Dia != "") ? datosEvento.ValorDol1Dia : "0";
             datosEvento.botonPago = datosEvento.BotonPagoDolares1Dia;
@@ -259,7 +259,6 @@ function procesoRespuestas(e, TituloEvento){
             datosEvento.aPagar = (datosEvento.ValorDolares != "") ? datosEvento.ValorDolares : "0";
             datosEvento.botonPago = datosEvento.BotonPagoDolares;
             datosEvento.ValorEvento = datosEvento.ValorDolares;
-            datosEvento.Moneda = "USD";
             datosMail.TextoInicial += datosMail.infoPagoPaypal;
             if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
                datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
@@ -267,7 +266,18 @@ function procesoRespuestas(e, TituloEvento){
         }
       break; 
       case 'SIN MEMBRESIA':
-            datosEvento.aPagar = datosEvento.ValorEvento;
+        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
+            datosEvento.aPagar = (datosEvento.Valor1Dia != "") ? datosEvento.Valor1Dia : "0";
+            datosEvento.botonPago = datosEvento.BotondePago1Dia;
+            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
+            celebracionIniciacionSabado();
+        } else{
+            datosEvento.aPagar = (datosEvento.ValorEvento != "") ? datosEvento.ValorEvento : "0";
+            datosEvento.botonPago = datosEvento.botonPago;
+            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+            } 
+        }
       break;
       case 'SIN MEMBRESIA-UY':
         if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
@@ -783,6 +793,7 @@ function buscoColumna(Campo, sheet){
 **************************************************************/
 function envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail){
   var mailRestantes = verificoCuotaMails();
+  var colTemporal = 0;
   if(mailRestantes == "ENVIADA"){
     var saludoInfo = "<br/>Espero que estés muy bien.<br/><br/>Muchas gracias por tu interés en nuestras actividades.<br/>";  
     subject = "Información solicitada sobre Tarjetas Kadampa";
