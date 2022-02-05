@@ -810,6 +810,7 @@ function envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Ape
     colTemporal = sheet[0].indexOf('Envio Info TKS')+1;  
     ActiveSheet.getRange(ActiveRow, colTemporal).setValue(mailRestantes).setBackground('#67ad63').setFontColor('white');
   } else {
+      colTemporal = sheet[0].indexOf('Envio Info TKS')+1;
       ActiveSheet.getRange(ActiveRow, colTemporal).setValue(mailRestantes).setBackground('#f02e61').setFontColor('white');
   }
 }
