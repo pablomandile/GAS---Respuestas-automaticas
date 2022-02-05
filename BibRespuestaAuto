@@ -838,7 +838,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   function buscoPlanillaCMKA(){
     for(var i = 0;i<datosTKCMKA.length; i++){
       correoPlanilla = datosTKCMKA[i][6].toString();
-      correoPlanilla = correoPlanilla.trim();
+      correoPlanilla = correoPlanilla.trim().toLowerCase();
       if(correoPlanilla == correo){
         datosEvento.NombreUsuario = datosTKCMKA[i][1];
         datosEvento.ApellidoUsuario = datosTKCMKA[i][2];
@@ -864,15 +864,15 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         }
       } 
    }
-   if (membresiaTK == 'SIN MEMBRESIA'){
-     buscoPlanillaZN();
+   if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == ''){
+     buscoPlanillaZN();     
    }
   }
 
   function buscoPlanillaZN(){
     for(var i = 0;i<datosTKZN.length; i++){
       correoPlanilla = datosTKZN[i][7].toString();
-      correoPlanilla = correoPlanilla.trim();
+      correoPlanilla = correoPlanilla.trim().toLowerCase();
       if(correoPlanilla == correo){
         datosEvento.NombreUsuario = datosTKZN[i][1];
         datosEvento.ApellidoUsuario = datosTKZN[i][2];
@@ -885,6 +885,8 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
             break;
             case 'COR':
                   membresiaTK = 'TK CORAZÓN';
+                  Logger.log('tkcorazon');
+
             break;
             case 'BEN':
                   membresiaTK = 'TK BENEFACTOR';
@@ -899,7 +901,6 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
       } 
     }
   }
-
   if (membresiaTK == ""){
     membresiaTK = 'SIN MEMBRESIA' + tkPais;
   }
