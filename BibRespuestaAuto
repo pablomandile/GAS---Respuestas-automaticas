@@ -113,6 +113,7 @@ function procesoRespuestas(e, TituloEvento){
   Nombre = Nombre.trim();
   Apellido = Apellido.trim();
   mail = mail.trim().toLowerCase();
+  Logger.log(mail);
 
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
@@ -192,10 +193,16 @@ function procesoRespuestas(e, TituloEvento){
     switch (tieneTK)  {
       case 'TK CLASES (Antes llamada ABONO MENSUAL)':
       // NO HAY DESCUENTO POR TK CLASES - VALOR GENERAL
-        datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
-        datosEvento.botonPago = datosEvento.BotondePagoAbono;
-        if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
           datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+          datosEvento.aPagar = (datosEvento.Valor1Dia != "") ? datosEvento.Valor1Dia : "0";
+          datosEvento.botonPago = datosEvento.BotondePago1Dia;
+        } else{
+            datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
+            datosEvento.botonPago = datosEvento.BotondePagoAbono;
+            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
+               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+            } 
         }
       break;
       case 'TK CORAZÓN':
