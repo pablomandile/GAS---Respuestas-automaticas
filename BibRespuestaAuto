@@ -489,7 +489,9 @@ function buscaCurso(TituloEvento, Pais){
       var infCurso = {
         ValorEvento:ValorEvento, 
         aPagar:ValorEvento, 
-        Asunto:valorPlanilla('Tipo') + " " + valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + " - " + TituloEvento,
+        Asunto:TituloEvento,
+        NombreEvento: valorPlanilla('Título'),
+        //Asunto:valorPlanilla('Tipo') + " " + valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + " - " + TituloEvento,
         subject:"",
         FechaEvento:valorPlanilla('Fecha'), 
         HoraEvento:valorPlanilla('Hora'), 
@@ -592,10 +594,13 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
             "</td></tr><tr><td valign='middle' style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
   var inicioPieMail = "</td></tr><tr height='150px' bgcolor='#4575ec'><td align='center' valign='middle' style='padding:0px 18px 40px 18px;'>" + styleF28White + datosMail.Saludo + finStyle ;
   var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
-
+if(datosEvento.NombreEvento != ""){
+  datosEvento.NombreEvento = " - " + datosEvento.NombreEvento;
+}
   var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong>" + finStyle +
-    styleF18 + "<br/>Nombre del evento: " + finStyle + styleF18Blue + "<strong>" + TituloEvento + "</strong>" + finStyle +
-    styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
+    styleF18 + "<br/>Nombre del evento: " + finStyle + styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
+    datosEvento.NombreEvento + finStyle +
+    //styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
     styleF18 + "<br/>Disponible por: " + datosEvento.Disponibilidad + finStyle +
     styleF18 + "<br/>Lugar: " + finStyle + styleF18Blue + "<strong>" + datosEvento.LugarEvento + "</strong>" + finStyle;
   
