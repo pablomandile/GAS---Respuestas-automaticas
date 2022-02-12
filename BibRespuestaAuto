@@ -597,8 +597,9 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
 if(datosEvento.NombreEvento != ""){
   datosEvento.NombreEvento = " - " + datosEvento.NombreEvento;
 }
-  var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong>" + finStyle +
-    styleF18 + "<br/>Nombre del evento: " + finStyle + styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
+  var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong><br/>" + finStyle +
+    //styleF18 + "Nombre del evento: " + finStyle + styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
+    styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
     datosEvento.NombreEvento + finStyle +
     //styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
     styleF18 + "<br/>Disponible por: " + datosEvento.Disponibilidad + finStyle +
