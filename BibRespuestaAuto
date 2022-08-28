@@ -105,7 +105,7 @@ function procesoRespuestas(e, TituloEvento){
   Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
   mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
   if (mail == ""){
-    mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mailTK) : "";
+    mail = (buscoColumna(Preguntas.mailTK,sheet) != 0) ? valorPlanilla(Preguntas.mailTK) : "";
     completarDatos = true;
   }
   var grabaciones = (buscoColumna(Preguntas.grabaciones,sheet) != 0) ? valorPlanilla(Preguntas.grabaciones) : "";
@@ -113,8 +113,7 @@ function procesoRespuestas(e, TituloEvento){
   Nombre = Nombre.trim();
   Apellido = Apellido.trim();
   mail = mail.trim().toLowerCase();
-  Logger.log(mail);
-
+  Logger.log('mail usuario: '+mail);
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
   var eventoPorUnDia = (buscoColumna(Preguntas.eventoPorUnDia,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorUnDia) : "";
@@ -126,7 +125,6 @@ function procesoRespuestas(e, TituloEvento){
   var datosMail = CargoDatosMail();    
   /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
       DESDE LA HOJA CRSOS Y MAILINFO */
-
   datosEvento.NombreUsuario = Nombre;
   datosEvento.ApellidoUsuario = Apellido;
   datosEvento.MailUsuario = mail;
@@ -181,14 +179,17 @@ function procesoRespuestas(e, TituloEvento){
       break;
     }
   }
+    Logger.log(' tipotk: '+ TipoTKyAbono);
 
   if(TipoTKyAbono == 'SI, TENGO TARJETA KADAMPA'){
+    Logger.log('pasa por if tipotk: '+ TipoTKyAbono);
     var tieneTK = chequeoTkActiva(mail, datosMail, datosEvento, TipoTKyAbono, Pais);
       } else if(Pais == 'Uruguay'){
           tieneTK = 'SIN MEMBRESIA-UY';
         } else{
             tieneTK = 'SIN MEMBRESIA';
   }
+  Logger.log('resultado de membresía para determinar pago: '+ tieneTK);
   if (chequeoTKS){
     switch (tieneTK)  {
       case 'TK CLASES (Antes llamada ABONO MENSUAL)':
@@ -273,6 +274,7 @@ function procesoRespuestas(e, TituloEvento){
         }
       break; 
       case 'SIN MEMBRESIA':
+        agregoNuevaPersonaNewsletter(mail);
         if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
             datosEvento.aPagar = (datosEvento.Valor1Dia != "") ? datosEvento.Valor1Dia : "0";
             datosEvento.botonPago = datosEvento.BotondePago1Dia;
@@ -325,13 +327,15 @@ function procesoRespuestas(e, TituloEvento){
   }
   if (grabaciones == 'Sí, quiero reservar las grabaciones'){
     if (Pais == 'Argentina'){
-      grabaciones = "<br><strong>Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabaciones + "</strong>" +
-        "<br><a href='"+ datosEvento.BotonPagoGrabaciones + 
-        "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
+      grabaciones = "<br><strong>Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabaciones + "</strong>"
+      // SE QUITÓ EL BOTÓN DE PAGO TEMPORAMENTE
+        // + "<br><a href='"+ datosEvento.BotonPagoGrabaciones + 
+        // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
     } else{
-      grabaciones = "<br><strong>Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabacionesDol + "</strong>" +
-        "<br><a href='"+ datosEvento.BotonPagoDolGrabaciones + 
-        "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
+      grabaciones = "<br><strong>Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabacionesDol + "</strong>"
+      // SE QUITÓ EL BOTÓN DE PAGO TEMPORAMENTE
+        // + "<br><a href='"+ datosEvento.BotonPagoDolGrabaciones + 
+        // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
     }
   } else {
     grabaciones = "";
@@ -486,12 +490,12 @@ function buscaCurso(TituloEvento, Pais){
       }
 
       //RETORNO VALORES EN OBJETO
+      //Asunto:valorPlanilla('Tipo') + " " + valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + " - " + TituloEvento,
       var infCurso = {
         ValorEvento:ValorEvento, 
         aPagar:ValorEvento, 
         Asunto:TituloEvento,
         NombreEvento: valorPlanilla('Título'),
-        //Asunto:valorPlanilla('Tipo') + " " + valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + " - " + TituloEvento,
         subject:"",
         FechaEvento:valorPlanilla('Fecha'), 
         HoraEvento:valorPlanilla('Hora'), 
@@ -727,8 +731,10 @@ function ArmoPago(datosEvento, datosMail){
   if (datosEvento['aPagar'] > 0 ){
     datosEvento['TextoInicial'] = datosMail['TextoInicial'];
     var LineaPago1 = "<br><strong>El valor del evento: " + datosEvento.Moneda + datosEvento['aPagar'] + "</strong>";
-    var LineaPago2 = "<br><a href='"+ datosEvento.botonPago +
-    "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
+    var LineaPago2 = '';
+    //SE DESACTIVA TEMPORALMENTE EL BOTON DE PAGO, SOLO PAGO POR TRANSFER
+    // var LineaPago2 = "<br><a href='"+ datosEvento.botonPago +
+    // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>;"
     datosEvento['LineasDePago'] = LineaPago1 + LineaPago2;
     datosEvento.subject = "¿Confirmaste tu inscripción a " + datosEvento.Asunto + "?";
     datosEvento.pagoTransfer = datosMail.PagoTransfer;
@@ -787,7 +793,7 @@ function verificarModalidad(ModalidadElegida, datosEvento){
     default:
       infoAcceso = "infoAccesoOnline";
     break;
-  }  
+  }
   return infoAcceso;
 }
 
@@ -846,7 +852,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   if (Pais == 'Uruguay'){
     tkPais = '-UY';
   }
-
+Logger.log('pasa por chequeo tk activa');
   buscoPlanillaCMKA();
 
   function buscoPlanillaCMKA(){
@@ -854,6 +860,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
       correoPlanilla = datosTKCMKA[i][6].toString();
       correoPlanilla = correoPlanilla.trim().toLowerCase();
       if(correoPlanilla == correo){
+        Logger.log('chequeo mail en cmka tk '+correoPlanilla + ' ' + correo);
         datosEvento.NombreUsuario = datosTKCMKA[i][1];
         datosEvento.ApellidoUsuario = datosTKCMKA[i][2];
         datosEvento.MailUsuario = correoPlanilla;
@@ -876,11 +883,12 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         } else {
           membresiaTK = 'SIN MEMBRESIA' + tkPais;
         }
-      } 
+      }
    }
    if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == ''){
      buscoPlanillaZN();     
    }
+   Logger.log('termino de buscar en las dos planillas: '+membresiaTK);
   }
 
   function buscoPlanillaZN(){
@@ -1201,6 +1209,20 @@ function traigoDatosCursos(){
 
 function recordatorioPago(){
   Browser.msgBox('MAIL RECORDATORIO DE PAGO', 'Función no implementada aún.', Browser.Buttons.OK); 
+}
+
+function agregoNuevaPersonaNewsletter(personaSinTK){
+  var persona = personaSinTK;
+  var ss = SpreadsheetApp.openById("1Vfu887gdGGpxttMbRlOMs7otTAMKrYYqHQhCi5aCMq8");
+  var sheetDatosIngresos = ss.getSheetByName("INGRESOS");
+  var DC = sheetDatosIngresos.getDataRange().getValues();
+  var datosIngresos = sheetDatosIngresos.getRange(2, 1, sheetDatosIngresos.getLastRow(),sheetDatosIngresos.getLastColumn()).getValues();
+
+  function esNueva(){
+    
+  }
+
+
 }
 /**************************************************************
 *** AGREGAR EL SIGUIENTE BLOQUE DE CÓDIGO EN EL APPS SCRIPT ***
