@@ -1,0 +1,96 @@
+function emailOnFormSubmit(e) {
+  var tkOnline = 1800;
+  var btPagoTkOnline = "";
+  var aPagar = 1800;
+  var valTarjeta = 1800;
+  var subject = "Inscripción a la Tarjeta Kadampa Online";
+  var activeSheet = SpreadsheetApp.getActiveSheet();
+  var activeRow = activeSheet.getLastRow();
+  var sheet = activeSheet.getDataRange().getValues();
+    colTemporal = sheet[0].indexOf('Nombre')+1;  
+  var nombre = activeSheet.getRange(activeRow, colTemporal).getValue();
+    colTemporal = sheet[0].indexOf('Apellido')+1;  
+  var apellido = activeSheet.getRange(activeRow, colTemporal).getValue();
+      colTemporal = sheet[0].indexOf('Dirección de correo electrónico')+1;  
+  var mail = activeSheet.getRange(activeRow, colTemporal).getValue();
+  var btPago = btPagoTkOnline;
+   
+  subject = subject;
+  var lineaPago1 = "<br/><font size='3' color=\"black\"><strong>👇 </strong></font>";
+  var lineaPago2 = "<br/><a href='"+ btPago + "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png'" +
+                    "height='59' width='319'></a>";
+  
+  // emailBody is for those devices that can't render HTML, is plain text
+  var emailBody = "¡Hola! " + "\n Muchas gracias por tu inscripción a la tarjeta Kadampa. "+
+    "\nPróximamente recibirás un email con más detalles y tu información de pago." + "\nMuchas Gracias";
+  var htmlBody =  "<font size = '3' color=\"black\">¡Hola " + "<font color=\"black\"><strong>" + 
+  nombre + " " + apellido + "</strong></font>" + "!</ font>" +
+  "<p>Muchas gracias por inscribirte a la tarjeta Kadampa! ☺️💞</p>" +
+  "<p>Te informamos que el valor de la Tarjeta Kadampa Online es de $" + valTarjeta + " abonando del 1 al 10" +
+  //"<br><font size='3' color=\"black\">Tu importe a abonar es: $" + aPagar + "</font>" + lineaPago1 + lineaPago2 +
+  "<br><font size='3' color=\"black\">Tu importe a abonar es: $" + aPagar + "</font>" +
+  "<p>AQUÍ TE CONTAMOS LAS FORMAS DE PAGO: </p>"+
+  "<p>1. TRANSFERENCIA BANCARIA</p>"+
+  "<section>Nombre: CENTRO DE MEDITACIÓN KADAMPA ARGENTINA <br>"+
+  "Banco Santander Río Cuenta Corriente en Pesos Nro:<br>"+
+  "001896/8 Sucursal: 429 <br>"+
+  "CUIT 30-71440026-2 <br>"+
+  "CBU: 0720429020000000189686 <br>"+
+  "ALIAS: PAZ.PURA.INTERIOR <br></section>" +
+  "<p>2. CON TARJETA DE CRÉDITO/DÉBITO: Únicamente de manera presencial en nuestro Centro, ubicado en Serrano 1316, Palermo.</p>"+
+  "<p>Para agilizar la registración de tu pago, nos ayudaría muchísimo, que nos envíes" +
+  " una foto del comprobante de pago por mail🥰. <br>"+
+   "<p> Tené en cuenta que podemos demorarnos hasta 48 hs en registrar tu pago. Una vez registrado, recibirás un correo electrónico con toda la información " +
+  "necesaria para participar de las actividades. </p>"+
+  "<p>¡ESTAMOS MUY FELICES QUE TE HAYAS SUMADO AL CENTRO DE MEDITACIÓN KADAMPA ARGENTINA! </p>"+
+    "<p>Esperamos que lo disfrutes, un cálido saludo.</p>"
+
+  // More info for Advanced Options Parameters 
+  // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
+  var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+  MailApp.sendEmail(mail, subject, emailBody, advancedOpts);
+  // Actualiza los campos en la planilla de cálculo del evento
+  activeSheet.getRange(activeRow, 11).setValue("ENVIADA");
+  activeSheet.getRange(activeRow, 10).setValue('$' + aPagar);
+  activeSheet.getRange(activeRow, 1).setBackground('#b3d1ff');
+  activeSheet.getRange(activeRow, 11).setBackground('green');
+  activeSheet.getRange(activeRow, 11).setFontColor('white');
+  SpreadsheetApp.flush();
+}
+
+function chequeoTkActiva(correo){
+  var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
+  var sheetDatosTKS = ss.getSheetByName("2022");
+  var datosTKS = sheetDatosTKS.getRange(3, 2, sheetDatosTKS.getLastRow(), 9).getValues();
+  var membresiaTK = '';
+
+  for(var i = 0;i<datosTKS.length; i++){
+    if(datosTKS[i][6] == correo){
+      if(datosTKS[i][3] == 'A' ){
+        switch (datosTKS[i][4]){
+          case 'BEN':
+            membresiaTK = 'TARJETA KADAMPA BENEFACTOR';
+          break;
+          case 'COR':
+            membresiaTK = 'TARJETA KADAMPA CORAZÓN';
+          break;
+          case 'CLA':
+            membresiaTK = 'TARJETA KADAMPA CLASES';
+          break;          
+          default:
+          break;
+        }
+      }
+    } else{
+      // cargoNuevaTK();
+    }
+  }
+  return membresiaTK;
+}
+
+function cargoNuevaTK(){
+  colTemporal = sheetDatosTKS[0].indexOf('Nombre')+1;  
+  var nombre = activeSheet.getRange(activeRow, colTemporal).getValue();
+
+
+}
