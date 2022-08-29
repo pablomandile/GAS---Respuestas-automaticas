@@ -104,6 +104,7 @@ function procesoRespuestas(e, TituloEvento){
   };
   Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
   mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
+  Logger.log('primer chequeo de mail: ' + mail);
   if (mail == ""){
     mail = (buscoColumna(Preguntas.mailTK,sheet) != 0) ? valorPlanilla(Preguntas.mailTK) : "";
     completarDatos = true;
@@ -113,7 +114,7 @@ function procesoRespuestas(e, TituloEvento){
   Nombre = Nombre.trim();
   Apellido = Apellido.trim();
   mail = mail.trim().toLowerCase();
-  Logger.log('mail usuario: '+mail);
+  Logger.log('mail usuario: '+ mail);
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
   var eventoPorUnDia = (buscoColumna(Preguntas.eventoPorUnDia,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorUnDia) : "";
@@ -552,7 +553,7 @@ function buscaCurso(TituloEvento, Pais){
         LinkYoutubeDiaLUNES:valorPlanilla('LinkYoutube DiaLunes'),
         LinkYoutubeDiaMARTES:valorPlanilla('LinkYoutube DiaMartes'),
         TextoLink:"<strong>LINK DE ACCESO: </strong>",
-        AvisoOnline:"<br><br><strong>La clase se activará el " + 
+        AvisoOnline:"<br><br><strong>La clase/sesión se activará el " + 
                     valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong><br>",
         Moneda:"$"
       };
@@ -602,7 +603,6 @@ if(datosEvento.NombreEvento != ""){
   datosEvento.NombreEvento = " - " + datosEvento.NombreEvento;
 }
   var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong><br/>" + finStyle +
-    //styleF18 + "Nombre del evento: " + finStyle + styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
     styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
     datosEvento.NombreEvento + finStyle +
     //styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
@@ -852,19 +852,19 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   if (Pais == 'Uruguay'){
     tkPais = '-UY';
   }
-Logger.log('pasa por chequeo tk activa');
+  Logger.log('pasa por chequeo tk activa');
   buscoPlanillaCMKA();
 
   function buscoPlanillaCMKA(){
     for(var i = 0;i<datosTKCMKA.length; i++){
-      correoPlanilla = datosTKCMKA[i][6].toString();
+      correoPlanilla = datosTKCMKA[i][7].toString();
       correoPlanilla = correoPlanilla.trim().toLowerCase();
       if(correoPlanilla == correo){
-        Logger.log('chequeo mail en cmka tk '+correoPlanilla + ' ' + correo);
+        Logger.log('chequeo mail en cmka tk '+ correoPlanilla + ' ' + correo);
         datosEvento.NombreUsuario = datosTKCMKA[i][1];
         datosEvento.ApellidoUsuario = datosTKCMKA[i][2];
         datosEvento.MailUsuario = correoPlanilla;
-        datosEvento.TelefonoUsuario = datosTKCMKA[i][7];
+        datosEvento.TelefonoUsuario = datosTKCMKA[i][8];
         if(datosTKCMKA[i][3] == 'A' ){
           switch (datosTKCMKA[i][4]){
             case 'CLA':
@@ -888,7 +888,7 @@ Logger.log('pasa por chequeo tk activa');
    if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == ''){
      buscoPlanillaZN();     
    }
-   Logger.log('termino de buscar en las dos planillas: '+membresiaTK);
+   Logger.log('termino de buscar en las dos planillas: '+ membresiaTK);
   }
 
   function buscoPlanillaZN(){
@@ -985,6 +985,7 @@ function envioLinksAConfirmados(){
       if(i > 0){
         if(inscripcion[i][pendiente] == 0){
           textoPago = (inscripcion[i][pago]).toString().trim().toUpperCase();
+          Logger.log(textoPago);
           if(textoPago == 'OK'){
             if(inscripcion[i][confirmacion] == ''){
               datosInscripcion = traigoDatosParticipante(i);
