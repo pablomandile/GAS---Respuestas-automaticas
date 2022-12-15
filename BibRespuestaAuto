@@ -7,8 +7,8 @@ function formateoPlanilla(){
   // Add a custom menu to the spreadsheet.
   SpreadsheetApp.getUi() // Or DocumentApp, SlidesApp, or FormApp.
       .createMenu('Menu CMKA')
-      .addItem('Recordatorio de Pago', 'BibRespuestaAuto.recordatorioPago')
-      .addItem('Envío Links a Confirmados', 'BibRespuestaAuto.envioLinksAConfirmados')
+      .addItem('Recordatorio de pago', 'BibRespuestaAuto.recordatorioPago')
+      .addItem('Envío confirmaciones', 'BibRespuestaAuto.envioLinksAConfirmados')
       .addItem('Consultar mails restantes', 'BibRespuestaAuto.verificoCuotaMailsmsg')
       .addToUi();
   var ActiveSheet = SpreadsheetApp.getActiveSheet();
@@ -89,7 +89,8 @@ function procesoRespuestas(e, TituloEvento){
             grabaciones: '¿Te gustaría adquirir las GRABACIONES de las enseñanzas recibidas durante el evento?',
             eventoPorDias : 'PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',
             eventoPorUnDia : 'PODÉS SUMARTE AL EVENTO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',
-            diasAParticipar: 'SELECCIONA QUE DIA/S PARTICIPARÁS'
+            diasAParticipar: 'SELECCIONA QUE DIA/S PARTICIPARÁS',
+            eventoFinDeSemana: 'PODÉS SUMARTE AL EVENTO COMPLETO O DEL FIN DE SEMANA. Por favor, seleccioná la opción que elegiste:'
   }
   var Nombre = "";
   var Apellido = "";
@@ -118,10 +119,17 @@ function procesoRespuestas(e, TituloEvento){
   Logger.log('mail usuario: '+ mail);
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
+  var eventoFinDeSemana = (buscoColumna(Preguntas.eventoFinDeSemana,sheet) != 0) ? valorPlanilla(Preguntas.eventoFinDeSemana) : "";
   var eventoPorUnDia = (buscoColumna(Preguntas.eventoPorUnDia,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorUnDia) : "";
   if (eventoPorUnDia == "VOY A PARTICIPAR VIERNES Y SÁBADO"){
     eventoPorUnDia = "VOY A PARTICIPAR POR DIA";
   }
+  if (eventoPorUnDia == ""){
+    if (eventoFinDeSemana != ""){
+      eventoPorUnDia = eventoFinDeSemana;
+    }
+  }
+
   var diasAParticipar = (buscoColumna(Preguntas.diasAParticipar,sheet) != 0) ? valorPlanilla(Preguntas.diasAParticipar) : "";
 
   /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
@@ -151,6 +159,7 @@ function procesoRespuestas(e, TituloEvento){
   }
   var chequeoTKS = true;
   Logger.log("evento por dia?" + eventoPorUnDia) ;
+
   //SI ES UN RETIRO DE VARIOS DÍAS ADMITE PAGO POR DÍA
   if (eventoPorDias != ""){
     switch (eventoPorDias)  {
@@ -200,132 +209,74 @@ function procesoRespuestas(e, TituloEvento){
   if (chequeoTKS){
     switch (tieneTK)  {
       case 'TK CLASES (Antes llamada ABONO MENSUAL)':
-      // NO HAY DESCUENTO POR TK CLASES - VALOR GENERAL
-        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
-          datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
-          datosEvento.aPagar = (datosEvento.Valor1Dia != "") ? datosEvento.Valor1Dia : "0";
-          datosEvento.botonPago = datosEvento.BotondePago1Dia;
-        } else{
-            datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
-            datosEvento.botonPago = datosEvento.BotondePagoAbono;
-            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
-               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
-            } 
-        }
+        tkTipoInscripcion("Valor1DiaTKCLA", "ValorAbono", "BotondePago1DiaTKCLA", "BotondePagoAbono");
       break;
       case 'TK CORAZÓN':
-        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
-            datosEvento.aPagar = (datosEvento.Valor1DiaTKCOR != "") ? datosEvento.Valor1DiaTKCOR : "0";
-            datosEvento.botonPago = datosEvento.BotondePago1DiaTKCOR;
-            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
-            celebracionIniciacionSabado();
-            Logger.log("pasa por tkcor even 1 dia" + datosEvento.aPagar);
-        } else{
-            datosEvento.aPagar = (datosEvento.ValorTKCorazon != "") ? datosEvento.ValorTKCorazon : "0";
-            datosEvento.botonPago = datosEvento.BotondePagoTKCorazon;
-            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
-               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
-            } 
-            Logger.log("pasa por tkcor completo" + datosEvento.aPagar);
-        }
+        tkTipoInscripcion("Valor1DiaTKCOR", "ValorTKCorazon", "BotondePago1DiaTKCOR", "BotondePagoTKCorazon");
       break; 
       case 'TK BENEFACTOR':
-        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
-            datosEvento.aPagar = (datosEvento.Valor1DiaTKBEN != "") ? datosEvento.Valor1DiaTKBEN : "0";
-            datosEvento.botonPago = datosEvento.BotondePago1DiaTKBEN;
-            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
-            celebracionIniciacionSabado();
-        } else{
-            datosEvento.aPagar = (datosEvento.ValorTKBenefactor != "") ? datosEvento.ValorTKBenefactor : "0";
-            datosEvento.botonPago = datosEvento.BotondePagoTKBenefactor;
-            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
-               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
-            } 
-        }
+        tkTipoInscripcion("Valor1DiaTKBEN", "ValorTKBenefactor", "BotondePago1DiaTKBEN", "BotondePagoTKBenefactor");
       break; 
       case 'TK ONLINE':
-            datosEvento.aPagar = (datosEvento.ValorAbono != "") ? datosEvento.ValorAbono : "0";
-            datosEvento.botonPago = datosEvento.BotondePagoAbono;
-            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+        tkTipoInscripcion("Valor1DiaTKCLA", "ValorAbono", "BotondePago1DiaTKCLA", "BotondePagoAbono");
       break; 
       case 'TK CORAZÓN-UY':
-        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
-            datosEvento.aPagar = (datosEvento.ValorDol1DiaTKCOR != "") ? datosEvento.ValorDol1DiaTKCOR : "0";
-            datosEvento.botonPago = datosEvento.BotonPagoDolT1DiaKCOR;
-            datosEvento.ValorEvento = datosEvento.ValorDolares;
-            datosEvento.Moneda = "USD";
-            datosMail.TextoInicial += datosMail.infoPagoPaypal;
-            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
-            celebracionIniciacionSabado();
-        } else{
-            datosEvento.aPagar = (datosEvento.ValorDolTKCOR != "") ? datosEvento.ValorDolTKCOR : "0";
-            datosEvento.botonPago = datosEvento.BotonPagoDolTKCOR;
-            datosEvento.ValorEvento = datosEvento.ValorDolares;
-            datosEvento.Moneda = "USD";
-            datosMail.TextoInicial += datosMail.infoPagoPaypal;
-            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
-               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
-            } 
-        }
+        tkTipoInscripcion("ValorDol1DiaTKCOR", "ValorDolTKCOR", "BotonPagoDol1DiaTKCOR", "BotonPagoDolTKCOR");
+        pasarEventoADolar();
+        celebracionIniciacionSabado();
       break; 
       case 'TK BENEFACTOR-UY':
-        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
-            datosEvento.aPagar = (datosEvento.ValorDol1Dia != "") ? datosEvento.ValorDol1Dia : "0";
-            datosEvento.botonPago = datosEvento.BotonPagoDolares1Dia;
-            datosEvento.ValorEvento = datosEvento.ValorDolares;
-            datosEvento.Moneda = "USD";
-            datosMail.TextoInicial += datosMail.infoPagoPaypal;
-            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
-            celebracionIniciacionSabado();
-        } else{
-            datosEvento.aPagar = (datosEvento.ValorDolares != "") ? datosEvento.ValorDolares : "0";
-            datosEvento.botonPago = datosEvento.BotonPagoDolares;
-            datosEvento.ValorEvento = datosEvento.ValorDolares;
-            datosMail.TextoInicial += datosMail.infoPagoPaypal;
-            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
-               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
-            } 
-        }
+        tkTipoInscripcion("ValorDol1DiaTKBEN", "ValorDolTKBEN", "BotonPagoDol1DiaTKBEN", "BotonPagoDolTKBEN");
+        pasarEventoADolar();
+        celebracionIniciacionSabado();
       break; 
       case 'SIN MEMBRESIA':
         agregoNuevaPersonaNewsletter(mail);
-        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
-            datosEvento.aPagar = (datosEvento.Valor1Dia != "") ? datosEvento.Valor1Dia : "0";
-            datosEvento.botonPago = datosEvento.BotondePago1Dia;
-            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
-            celebracionIniciacionSabado();
-        } else{
-            datosEvento.aPagar = (datosEvento.ValorEvento != "") ? datosEvento.ValorEvento : "0";
-            datosEvento.botonPago = datosEvento.botonPago;
-            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
-               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
-            } 
-        }
+        tkTipoInscripcion("Valor1Dia", "ValorEvento", "BotondePago1Dia", "botonPago");
+        celebracionIniciacionSabado();
       break;
       case 'SIN MEMBRESIA-UY':
-        if(eventoPorUnDia == 'VOY A PARTICIPAR POR DIA'){
-            datosEvento.ValorEvento = datosEvento.ValorDolares;
-            datosEvento.Moneda = "USD";
-            datosMail.TextoInicial += datosMail.infoPagoPaypal;
-            datosEvento.aPagar = (datosEvento.ValorDol1Dia != "") ? datosEvento.ValorDol1Dia : "0";
-            datosEvento.botonPago = datosEvento.BotonPagoDolares1Dia;
-            datosEvento.textoInscPorDia = "<br>Te inscribiste para participar un día<br>";
-            celebracionIniciacionSabado();
-        } else{
-            datosEvento.ValorEvento = datosEvento.ValorDolares;
-            datosEvento.Moneda = "USD";
-            datosEvento.aPagar = datosEvento.ValorEvento;
-            datosMail.TextoInicial += datosMail.infoPagoPaypal;
-            datosEvento.botonPago = datosEvento.BotonPagoDolares;
-            if(eventoPorUnDia == 'VOY A PARTICIPAR DEL EVENTO COMPLETO'){
-               datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
-            } 
-        }
+        tkTipoInscripcion("ValorDol1Dia", "ValorDolares", "BotonPagoDolares1Dia", "BotonPagoDolares");
+        pasarEventoADolar();
+        celebracionIniciacionSabado();
       break;
       default:
       break;
     }  
   }
+
+  function pasarEventoADolar(){
+    datosEvento.ValorEvento = datosEvento.ValorDolares;
+    datosEvento.Moneda = "USD";
+    datosMail.TextoInicial += datosMail.infoPagoPaypal;
+  }
+
+  function tkTipoInscripcion(undia, completo, btn1dia, btnCompleto){
+    switch (eventoPorUnDia)  {
+      case 'VOY A PARTICIPAR POR DIA':
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento por día.<br>";
+        datosEvento.aPagar = (datosEvento[undia] != "") ? datosEvento[undia] : "0";
+        datosEvento.botonPago = datosEvento[btn1dia];
+      break;
+      case 'VOY A PARTICIPAR DEL FIN DE SEMANA':
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del finde semana.<br>";
+        datosEvento.aPagar = (datosEvento[undia] != "") ? datosEvento[undia] : "0";
+        datosEvento.botonPago = datosEvento[btn1dia];
+        datosEvento.infoPrograma = datosEvento.programaFinDeSemana;
+      break;
+      case 'VOY A PARTICIPAR DEL EVENTO COMPLETO':
+        datosEvento.aPagar = (datosEvento[completo] != "") ? datosEvento[completo] : "0";
+        datosEvento.botonPago = datosEvento[btnCompleto];
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+      break;
+      default:
+        datosEvento.aPagar = (datosEvento[completo] != "") ? datosEvento[completo] : "0";
+        datosEvento.botonPago = datosEvento[btnCompleto];
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+      break;
+      }
+  }
+
   function celebracionIniciacionSabado(){
     if(datosEvento.Tipo = "Celebración"){
               datosEvento.LinkYoutubePrograma = "";
@@ -477,8 +428,10 @@ function buscaCurso(TituloEvento, Pais){
       var ValorDolares = valorPlanilla('ValorDolares');
       var SinDescuentoDol = valorPlanilla('SinDescuentoDol');
       var ValorDolTKCOR = valorPlanilla('ValorDolTKCOR');
+      var ValorDolTKBEN = valorPlanilla('ValorDolTKBEN');
       var SinDescuentoDolTKCOR = valorPlanilla('SinDescuentoDolTKCOR');
       var infoPrograma = valorPlanilla('Programa');
+
       var infoFechaDescuento = valorPlanilla('Precio desc anticipado');
       if (infoFechaDescuento != "") {
         var DiaActual = new Date();
@@ -525,17 +478,21 @@ function buscaCurso(TituloEvento, Pais){
         ValorTKCorazon:ValorTKCorazon,
         ValorTKBenefactor:ValorTKBenefactor,
         Valor1Dia:valorPlanilla('Valor1Dia'),
+        Valor1DiaTKCLA: valorPlanilla('Valor1DiaTKCLA'),
         Valor1DiaTKCOR:valorPlanilla('Valor1DiaTKCOR'),
         Valor1DiaTKBEN:valorPlanilla('Valor1DiaTKBEN'),
         ValorDol1Dia: valorPlanilla('ValorDol1Dia'),
         ValorDol1DiaTKCOR:valorPlanilla('ValorDol1DiaTKCOR'),
+        ValorDol1DiaTKBEN:valorPlanilla('ValorDol1DiaTKBEN'),
         ValorDolares:ValorDolares,
         ValorDolTKCOR:ValorDolTKCOR,
+        ValorDolTKBEN:ValorDolTKBEN,
         ValorGrabaciones:valorPlanilla('ValorGrabaciones'),
         ValorGrabacionesDol:valorPlanilla('ValorGrabacionesDol'),
         botonPago:valorPlanilla('BotondePago'),
         BotondePago1Dia:valorPlanilla('BotondePago1Dia'),
         BotondePago2Dias:valorPlanilla('BotondePago2Dias'),
+        BotondePago1DiaTKCLA:valorPlanilla('BotondePago1DiaTKCLA'),
         BotondePago1DiaTKCOR:valorPlanilla('BotondePago1DiaTKCOR'),
         BotondePago1DiaTKBEN:valorPlanilla('BotondePago1DiaTKBEN'),
         BotondePagoTKCorazon:valorPlanilla('BotondePagoTKCorazon'),
@@ -544,7 +501,9 @@ function buscaCurso(TituloEvento, Pais){
         BotonPagoDolares: valorPlanilla('BotonPagoDolares'),
         BotonPagoDolares1Dia:valorPlanilla('BotonPagoDolares1Dia'),
         BotonPagoDolTKCOR:valorPlanilla('BotonPagoDolTKCOR'),
-        BotonPagoDolT1DiaKCOR:valorPlanilla('BotonPagoDolT1DiaKCOR'),
+        BotonPagoDol1DiaTKCOR:valorPlanilla('BotonPagoDol1DiaTKCOR'),
+        BotonPagoDolTKBEN:valorPlanilla('BotonPagoDolTKBEN'),
+        BotonPagoDol1DiaTKBEN:valorPlanilla('BotonPagoDol1DiaTKBEN'),
         BotonPagoGrabaciones:valorPlanilla('BotonPagoGrabaciones'),
         BotonPagoDolGrabaciones:valorPlanilla('BotonPagoDolGrabaciones'),
         LineasDePago:"",
@@ -552,6 +511,7 @@ function buscaCurso(TituloEvento, Pais){
         infoAcceso:"",
         pagoTransfer:"",
         infoPrograma:infoPrograma,
+        programaFinDeSemana: valorPlanilla('Programa Fin de semana'),
         diasAParticipar : "",
         cantDiasElegidos : 0,
         textoInscPorDia : "",
@@ -559,6 +519,7 @@ function buscaCurso(TituloEvento, Pais){
         webDelEvento: valorPlanilla('WEB del Evento'),
         LinkYoutube: valorPlanilla('LinkYoutube'),
         LinkYoutubePrograma: valorPlanilla('LinkYoutube Programa'),
+        LinkYoutubeFinDeSemana: valorPlanilla('LinkYoutube Fin de semana'),
         LinkYoutubeDias:"",
         LinkYoutubeDiaVIERNES:valorPlanilla('LinkYoutube DiaViernes'),
         LinkYoutubeDiaSABADO:valorPlanilla('LinkYoutube DiaSabado'),
@@ -647,7 +608,7 @@ if(datosEvento.NombreEvento != ""){
     ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('CH');
     var nombreEvento = ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).getValue();
     var datosPlanillaEventoOnl = ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).getValue();
-    var datosPlanillaEventoPre = ActiveSheet.getRange(3, buscoColumna('DatosEvento',sheet)).getValue();
+    var datosPlanillaEventoPre = ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).getValue();
     var planillaPrograma = ActiveSheet.getRange(2, buscoColumna('Programa',sheet)).getValue();
     if (nombreEvento == ""){
       ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).setValue(TituloEvento);
@@ -659,7 +620,7 @@ if(datosEvento.NombreEvento != ""){
     }
     if (datosPlanillaEventoPre == ""){
       if(ModalidadElegida == "PRESENCIAL"){
-        ActiveSheet.getRange(3, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
+        ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
       }
     } 
     if (planillaPrograma == ""){
@@ -974,11 +935,12 @@ function envioLinksAConfirmados(){
   var datosEventoOnline = ActiveSheet.getRange(2, buscoColumna('DatosEvento', sheet)).getValue();
   var datosEventoPresencial = ActiveSheet.getRange(3, buscoColumna('DatosEvento', sheet)).getValue();
   var datosEvento = "";
-  var programa = ActiveSheet.getRange(2, buscoColumna('Programa', sheet)).getValue();
+  var programa = "";
   var asunto = 'CONFIRMACIÓN: inscripción a "' + tituloEvento;
   var pendiente = inscripcion[0].indexOf('Pendiente');  
   var pago = inscripcion[0].indexOf('Pago'); 
   var confirmacion = inscripcion[0].indexOf('Confirmación');
+  
   // var ui = SpreadsheetApp.getUi(); 
   var avisoOnline = "";
   Confirmacion();
@@ -1012,6 +974,14 @@ function envioLinksAConfirmados(){
             if(inscripcion[i][confirmacion] == ''){
               datosInscripcion = traigoDatosParticipante(i);
               datosCurso = traigoDatosCursos(tituloEvento);
+              Logger.log("tipo de insc " + datosInscripcion.eventoFinDeSemana);
+              if(datosInscripcion.eventoFinDeSemana == 'VOY A PARTICIPAR DEL FIN DE SEMANA'){
+                programa = datosCurso.programaFinDeSemana;
+                datosInscripcion.eventoFinDeSemana = "<br>Tu inscripción: " + datosInscripcion.eventoFinDeSemana;
+              } else {
+                programa = datosCurso.programa;
+              }
+              Logger.log(programa);
               Logger.log(tituloEvento);
               Logger.log(datosCurso.tipo);
               datosMail = CargoDatosMail();
@@ -1025,7 +995,7 @@ function envioLinksAConfirmados(){
                               datosInscripcion.apellido + "</strong>!" + e.finStyle;
               htmlBody = partesMail.encabezadoMail + saludoInicial + e.styleF22 + datosMail.TextoInicialConfirmado + e.finStyle + 
                           e.styleF22Tab + 'Membresía: ' + e.finStyle + e.styleF22Morado + datosInscripcion.membresia + e.finStyle + '<br>' +
-                          e.styleF18 + datosInscripcion.completoDia + datosInscripcion.completoDiaRetiro +
+                          e.styleF18 + datosInscripcion.completoDia + datosInscripcion.completoDiaRetiro + datosInscripcion.eventoFinDeSemana +
                           " " + datosInscripcion.diasQueParticipa + datosInscripcion.introduccion + e.finStyle + 
                           datosEvento + e.styleF18 + programa + e.finStyle + e.styleF22Morado + datosCurso.webDelEvento +
                           e.finStyle + e.styleF18 + textoAcceso + e.finStyle + 
@@ -1058,6 +1028,7 @@ function envioLinksAConfirmados(){
             disponibilidad:valorPlanillaC('Disponibilidad', i, DC), 
             lugarEvento:valorPlanillaC('Lugar', i, DC),
             programa: valorPlanillaC('Programa', i, DC),
+            programaFinDeSemana: valorPlanillaC('Programa Fin de semana', i, DC),
             webDelEvento: valorPlanillaC('WEB del Evento', i, DC),
             asunto: 'CONFIRMACIÓN: inscripción a "' + tituloEvento + '" y links de acceso.'
         }
@@ -1101,10 +1072,12 @@ function envioLinksAConfirmados(){
       completoDiaRetiro: (buscoColumna('PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:',sheet) != 0) ? valorPlanilla('PODÉS SUMARTE AL RETIRO COMPLETO O POR DÍA. Por favor, seleccioná la opción que elegiste:', index) : "",
       
       diasQueParticipa: (buscoColumna('SELECCIONA QUE DIA/S PARTICIPARÁS',sheet) != 0) ? valorPlanilla('SELECCIONA QUE DIA/S PARTICIPARÁS', index) : "",
+      eventoFinDeSemana: (buscoColumna('PODÉS SUMARTE AL EVENTO COMPLETO O DEL FIN DE SEMANA. Por favor, seleccioná la opción que elegiste:',sheet) != 0) ? valorPlanilla('PODÉS SUMARTE AL EVENTO COMPLETO O DEL FIN DE SEMANA. Por favor, seleccioná la opción que elegiste:', index) : ""
     };
     if(inscripcion.completoDia != ""){
       inscripcion.completoDia = '<br>Tu inscripción: ' + inscripcion.completoDia;
-    }else if(inscripcion.completoDiaRetiro != ""){
+    }
+    if(inscripcion.completoDiaRetiro != ""){
       inscripcion.completoDiaRetiro = '<br>Tu inscripción: ' + inscripcion.completoDiaRetiro;
     }
     if(inscripcion.diasQueParticipa != ""){
@@ -1117,7 +1090,7 @@ function envioLinksAConfirmados(){
     }
     
     return inscripcion;
-}
+  }
    
 
   function valorPlanilla(valCampo, i){
