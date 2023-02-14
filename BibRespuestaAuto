@@ -8,9 +8,11 @@ function formateoPlanilla(){
   SpreadsheetApp.getUi() // Or DocumentApp, SlidesApp, or FormApp.
       .createMenu('Menu CMKA')
       .addItem('Recordatorio de pago', 'BibRespuestaAuto.recordatorioPago')
-      .addItem('Envío confirmaciones', 'BibRespuestaAuto.envioLinksAConfirmados')
+      .addItem('Envío de confirmaciones', 'BibRespuestaAuto.envioLinksAConfirmados')
       .addItem('Consultar mails restantes', 'BibRespuestaAuto.verificoCuotaMailsmsg')
       .addToUi();
+
+      
   var ActiveSheet = SpreadsheetApp.getActiveSheet();
   var ActiveCol = ActiveSheet.getLastColumn();
   var sheet = ActiveSheet.getDataRange().getValues();
@@ -820,7 +822,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   var sheetDatosTKCMKA = ss.getSheetByName("AÑO ACTUAL");
   var datosTKCMKA = sheetDatosTKCMKA.getRange(3, 1, sheetDatosTKCMKA.getLastRow(),9).getValues();
   var ss2 = SpreadsheetApp.openById('1glxhF229H3fuWPrpzExpPX1YPcXhGrY1-mBw8TfToMk');
-  var sheetDatosTKZN = ss2.getSheetByName('AÑO ACTUAL');
+  var sheetDatosTKZN = ss2.getSheetByName('TK 2022');
   var datosTKZN = sheetDatosTKZN.getRange(3, 1, sheetDatosTKZN.getLastRow(), 9).getValues();
 
   if (Pais == 'Uruguay'){
