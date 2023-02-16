@@ -7,59 +7,51 @@ function formateoPlanilla(){
   // Add a custom menu to the spreadsheet.
   SpreadsheetApp.getUi() // Or DocumentApp, SlidesApp, or FormApp.
       .createMenu('Menu CMKA')
-      .addItem('Recordatorio de pago', 'BibRespuestaAuto.recordatorioPago')
-      .addItem('Envío de confirmaciones', 'BibRespuestaAuto.envioLinksAConfirmados')
-      .addItem('Consultar mails restantes', 'BibRespuestaAuto.verificoCuotaMailsmsg')
+      .addItem('Recordatorio de pago', 'TestBiblRespuesta.recordatorioPago')
+      .addItem('Envío de confirmaciones', 'TestBiblRespuesta.envioLinksAConfirmados')
+      .addItem('Consultar mails restantes', 'TestBiblRespuesta.verificoCuotaMailsmsg')
       .addToUi();
 
-      
   var ActiveSheet = SpreadsheetApp.getActiveSheet();
   var ActiveCol = ActiveSheet.getLastColumn();
   var sheet = ActiveSheet.getDataRange().getValues();
   var colTemporal = "";
+  var colorCelda = '#CFE2F3';
+  var colorAlerta = '#faa16e';
+  
+ // LA PLANILLA YA TIENE FORMATO? EXISTE LA COLUMNA ASISTENCIA?
   colTemporal = sheet[0].indexOf('Asistencia')+1;  
+
+  // SI NO FORMATEO LA PLANILLA Y AGREGO COLUMNAS
   if (colTemporal == 0){
+    var columColorAlerta = [ActiveCol+5, ActiveCol];
+    Logger.log(columColorAlerta);
+    var columnas = ['Pendiente', 'Respuesta', 'Envio Info TKS', 'Membresía', 'Links Youtube', 'Pago', 'Recordatorio pago', 'Confirmación', 'NombreEvento', 'DatosEvento', 'Programa', 'FechaPago', 'Valor', 'Forma', 'Asistencia'];
+    for(var i = 0; i < columnas.length; i++){
+      ActiveSheet.insertColumnAfter(ActiveCol);
+      if (columnas[i] == 'Pago' || columnas[i] == 'Pendiente'){
+        ActiveSheet.getRange(1, ActiveCol+1).setValue(columnas[i]).setBackground(colorAlerta);
+      } else{
+        ActiveSheet.getRange(1, ActiveCol+1).setValue(columnas[i]).setBackground(colorCelda);
+      }
+      ActiveCol = ActiveSheet.getLastColumn();
+    }
+    tamanioCeldas();
+    SpreadsheetApp.flush();
+  Browser.msgBox('SE FORMATEO LA PLANILLA CORRECTAMENTE', 'Se agregaron las columnas necesarias para el proceso de respuestas.', 
+    Browser.Buttons.OK); 
+    }
+  
+  function tamanioCeldas(){
     var MaxCols = ActiveSheet.getMaxColumns();
     for (var i = 0; i < MaxCols; i++){
       ActiveSheet.autoResizeColumn(i+1);
-      ActiveSheet.getRange(1, i+1).setBackground('#CFE2F3');
-    }
-    ActiveSheet.insertColumnAfter(ActiveCol);
-    ActiveSheet.getRange(1, ActiveCol+1).setValue('Pendiente').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+1);
-    ActiveSheet.getRange(1, ActiveCol+2).setValue('Respuesta').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+2);
-    ActiveSheet.getRange(1, ActiveCol+3).setValue('Envio Info TKS').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+3);
-    ActiveSheet.getRange(1, ActiveCol+4).setValue('Membresía').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+4);
-    ActiveSheet.getRange(1, ActiveCol+5).setValue('Links Youtube').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+5);
-    ActiveSheet.getRange(1, ActiveCol+6).setValue('Pago').setBackground('#faa16e');
-    ActiveSheet.insertColumnAfter(ActiveCol+6);
-    ActiveSheet.getRange(1, ActiveCol+7).setValue('Recordatorio pago').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+7);
-    ActiveSheet.getRange(1, ActiveCol+8).setValue('Confirmación').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+8);
-    ActiveSheet.getRange(1, ActiveCol+9).setValue('NombreEvento').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+9);
-    ActiveSheet.getRange(1, ActiveCol+10).setValue('DatosEvento').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+10);
-    ActiveSheet.getRange(1, ActiveCol+11).setValue('Programa').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+11);
-    ActiveSheet.getRange(1, ActiveCol+12).setValue('FechaPago').setBackground('#CFE2F3');
-    MaxCols = ActiveSheet.getMaxColumns();
-    ActiveSheet.insertColumnAfter(ActiveCol+12);
-    ActiveSheet.getRange(1, ActiveCol+13).setValue('Valor').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+13);
-    ActiveSheet.getRange(1, ActiveCol+14).setValue('Forma').setBackground('#CFE2F3');
-    ActiveSheet.insertColumnAfter(ActiveCol+14);
-    ActiveSheet.getRange(1, ActiveCol+15).setValue('Asistencia').setBackground('#CFE2F3');
-    for (var i = 0; i < MaxCols; i++){
-      ActiveSheet.autoResizeColumn(i+1);
+      if (i == columColorAlerta[0] || i == columColorAlerta[1]){
+      }else{
+        ActiveSheet.getRange(1, i+1).setBackground(colorCelda);
+      }
     }
   }
-    SpreadsheetApp.flush();
 }
 
 /*************************************************************
@@ -135,11 +127,10 @@ function procesoRespuestas(e, TituloEvento){
   var diasAParticipar = (buscoColumna(Preguntas.diasAParticipar,sheet) != 0) ? valorPlanilla(Preguntas.diasAParticipar) : "";
 
   /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
-      DESDE LA HOJA CRSOS Y MAILINFO */
+      DESDE LA HOJA CURSOS Y MAILINFO */
   var datosEvento = buscaCurso(TituloEvento, Pais);
   var datosMail = CargoDatosMail();    
-  /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
-      DESDE LA HOJA CRSOS Y MAILINFO */
+  /* FIN BUSQUEDA DE DATOS CURSOS Y MAILINFO */
   datosEvento.NombreUsuario = Nombre;
   datosEvento.ApellidoUsuario = Apellido;
   datosEvento.MailUsuario = mail;
@@ -210,7 +201,7 @@ function procesoRespuestas(e, TituloEvento){
   Logger.log('resultado de membresía para determinar pago: '+ tieneTK);
   if (chequeoTKS){
     switch (tieneTK)  {
-      case 'TK CLASES (Antes llamada ABONO MENSUAL)':
+      case 'TK CLASES':
         tkTipoInscripcion("Valor1DiaTKCLA", "ValorAbono", "BotondePago1DiaTKCLA", "BotondePagoAbono");
       break;
       case 'TK CORAZÓN':
@@ -221,6 +212,11 @@ function procesoRespuestas(e, TituloEvento){
       break; 
       case 'TK ONLINE':
         tkTipoInscripcion("Valor1DiaTKCLA", "ValorAbono", "BotondePago1DiaTKCLA", "BotondePagoAbono");
+      break; 
+        case 'TK CLASES-UY':
+        tkTipoInscripcion("ValorDol1DiaTKCLA", "ValorDolTKCLA", "BotonPagoDol1DiaTKCOR", "BotonPagoDolTKCOR");
+        pasarEventoADolar();
+        celebracionIniciacionSabado();
       break; 
       case 'TK CORAZÓN-UY':
         tkTipoInscripcion("ValorDol1DiaTKCOR", "ValorDolTKCOR", "BotonPagoDol1DiaTKCOR", "BotonPagoDolTKCOR");
@@ -259,22 +255,35 @@ function procesoRespuestas(e, TituloEvento){
         datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento por día.<br>";
         datosEvento.aPagar = (datosEvento[undia] != "") ? datosEvento[undia] : "0";
         datosEvento.botonPago = datosEvento[btn1dia];
+        datosEvento.aPagarSoloEvento = datosEvento.aPagar;
       break;
       case 'VOY A PARTICIPAR DEL FIN DE SEMANA':
         datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del finde semana.<br>";
         datosEvento.aPagar = (datosEvento[undia] != "") ? datosEvento[undia] : "0";
         datosEvento.botonPago = datosEvento[btn1dia];
         datosEvento.infoPrograma = datosEvento.programaFinDeSemana;
+        datosEvento.aPagarSoloEvento = datosEvento.aPagar;
       break;
       case 'VOY A PARTICIPAR DEL EVENTO COMPLETO':
         datosEvento.aPagar = (datosEvento[completo] != "") ? datosEvento[completo] : "0";
         datosEvento.botonPago = datosEvento[btnCompleto];
         datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+        datosEvento.aPagarSoloEvento = datosEvento.aPagar;
+        sumoGrabaciones();
       break;
+        case 'VOY A PARTICIPAR DEINTRODUCCIÓN + DÍA DE LA INICIACIÓN':
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento por día.<br>";
+        datosEvento.aPagar = (datosEvento[undia] != "") ? datosEvento[undia] : "0";
+        datosEvento.botonPago = datosEvento[btn1dia];
+        datosEvento.aPagarSoloEvento = datosEvento.aPagar;
+        datosEvento.infoPrograma = datosEvento.programaFinDeSemana;
+      break; 
       default:
         datosEvento.aPagar = (datosEvento[completo] != "") ? datosEvento[completo] : "0";
         datosEvento.botonPago = datosEvento[btnCompleto];
         datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+        datosEvento.aPagarSoloEvento = datosEvento.aPagar;
+        sumoGrabaciones();
       break;
       }
   }
@@ -292,21 +301,28 @@ function procesoRespuestas(e, TituloEvento){
     datosEvento = ArmoPago(datosEvento, datosMail);
     datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
   }
-  if (grabaciones == 'Sí, quiero reservar las grabaciones'){
-    if (Pais == 'Argentina'){
-      grabaciones = "<br><strong>Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabaciones + "</strong>"
-      // SE QUITÓ EL BOTÓN DE PAGO TEMPORAMENTE
-        // + "<br><a href='"+ datosEvento.BotonPagoGrabaciones + 
-        // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
-    } else{
-      grabaciones = "<br><strong>Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabacionesDol + "</strong>"
-      // SE QUITÓ EL BOTÓN DE PAGO TEMPORAMENTE
-        // + "<br><a href='"+ datosEvento.BotonPagoDolGrabaciones + 
-        // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
+
+  function sumoGrabaciones(){
+    if (grabaciones == 'Sí, quiero reservar las grabaciones'){
+      if (Pais == 'Argentina'){
+        grabaciones = "Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabaciones + "<br>";
+        datosEvento.aPagar += datosEvento.ValorGrabaciones;
+        // SE QUITÓ EL BOTÓN DE PAGO TEMPORAMENTE
+          // + "<br><a href='"+ datosEvento.BotonPagoGrabaciones + 
+          // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
+      } else{
+        grabaciones = "Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabacionesDol + "<br>";
+        datosEvento.aPagar += datosEvento.ValorGrabacionesDol;
+        // SE QUITÓ EL BOTÓN DE PAGO TEMPORAMENTE
+          // + "<br><a href='"+ datosEvento.BotonPagoDolGrabaciones + 
+          // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
+      }
+    } else {
+      grabaciones = "";
+      datosEvento.aPagarSoloEvento = datosEvento.aPagar;
     }
-  } else {
-    grabaciones = "";
   }
+  
   var seEnvioMail = ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK, grabaciones, ModalidadElegida);
 
   if (infoTKAbono == "SI, me gustaría!"){
@@ -433,7 +449,6 @@ function buscaCurso(TituloEvento, Pais){
       var ValorDolTKBEN = valorPlanilla('ValorDolTKBEN');
       var SinDescuentoDolTKCOR = valorPlanilla('SinDescuentoDolTKCOR');
       var infoPrograma = valorPlanilla('Programa');
-
       var infoFechaDescuento = valorPlanilla('Precio desc anticipado');
       if (infoFechaDescuento != "") {
         var DiaActual = new Date();
@@ -463,6 +478,7 @@ function buscaCurso(TituloEvento, Pais){
       var infCurso = {
         ValorEvento:ValorEvento, 
         aPagar:ValorEvento, 
+        aPagarSoloEvento: "",
         Asunto:TituloEvento,
         NombreEvento: valorPlanilla('Título'),
         subject:"",
@@ -483,12 +499,14 @@ function buscaCurso(TituloEvento, Pais){
         Valor1DiaTKCLA: valorPlanilla('Valor1DiaTKCLA'),
         Valor1DiaTKCOR:valorPlanilla('Valor1DiaTKCOR'),
         Valor1DiaTKBEN:valorPlanilla('Valor1DiaTKBEN'),
-        ValorDol1Dia: valorPlanilla('ValorDol1Dia'),
-        ValorDol1DiaTKCOR:valorPlanilla('ValorDol1DiaTKCOR'),
-        ValorDol1DiaTKBEN:valorPlanilla('ValorDol1DiaTKBEN'),
         ValorDolares:ValorDolares,
+        ValorDolTKCLA:valorPlanilla('ValorDolTKCLA'),
         ValorDolTKCOR:ValorDolTKCOR,
         ValorDolTKBEN:ValorDolTKBEN,
+        ValorDol1Dia: valorPlanilla('ValorDol1Dia'),
+        ValorDol1DiaTKCLA:valorPlanilla('ValorDol1DiaTKCLA'),
+        ValorDol1DiaTKCOR:valorPlanilla('ValorDol1DiaTKCOR'),
+        ValorDol1DiaTKBEN:valorPlanilla('ValorDol1DiaTKBEN'),
         ValorGrabaciones:valorPlanilla('ValorGrabaciones'),
         ValorGrabacionesDol:valorPlanilla('ValorGrabacionesDol'),
         botonPago:valorPlanilla('BotondePago'),
@@ -651,9 +669,13 @@ if(datosEvento.NombreEvento != ""){
   var mailEnviar = verificoCuotaMails();
   if(mailEnviar == "ENVIADA"){
     var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
-      styleF22Tab + 'Membresía: ' + finStyle + styleF22Morado + tieneTK + '<br>' + finStyle +
-      styleF22Morado + datosEvento.textoInscPorDia + finStyle + styleF22Tab + datosEvento.LineasDePago + finStyle + 
-      styleF22 + datosEvento.textoErrorMembresia + finStyle + styleF22Tab + grabaciones + finStyle +
+      styleF22Morado + datosEvento.textoInscPorDia + finStyle +
+      styleF22 + datosEvento.LineasDePago + finStyle +
+      styleF22 + 'Valor con descuento aplicado por membresía ' + finStyle + styleF22Morado + tieneTK + ': ' +
+        datosEvento.Moneda + datosEvento.aPagarSoloEvento + '<br>' + finStyle +
+      styleF22 + grabaciones + finStyle +
+      styleF22Morado + '<br><strong>Total a abonar: ' + datosEvento.Moneda + datosEvento.aPagar + '</strong><br>' + finStyle +
+      styleF22 + datosEvento.textoErrorMembresia + finStyle + 
       styleF22 + datosEvento.pagoTransfer + finStyle + 
       DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF22Morado + datosEvento.webDelEvento + finStyle +
       styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + datosEvento.TextoLink + finStyle + 
@@ -706,7 +728,7 @@ if(datosEvento.NombreEvento != ""){
 function ArmoPago(datosEvento, datosMail){
   if (datosEvento['aPagar'] > 0 ){
     datosEvento['TextoInicial'] = datosMail['TextoInicial'];
-    var LineaPago1 = "<br><strong>El valor del evento: " + datosEvento.Moneda + datosEvento['aPagar'] + "</strong>";
+    var LineaPago1 = "<br><strong>El valor del evento: " + datosEvento.Moneda + datosEvento.ValorEvento + "</strong><br>";
     var LineaPago2 = '';
     //SE DESACTIVA TEMPORALMENTE EL BOTON DE PAGO, SOLO PAGO POR TRANSFER
     // var LineaPago2 = "<br><a href='"+ datosEvento.botonPago +
@@ -844,7 +866,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         if(datosTKCMKA[i][2] == 'A' ){
           switch (datosTKCMKA[i][3]){
             case 'CLA':
-                  membresiaTK = 'TK CLASES (Antes llamada ABONO MENSUAL)' + tkPais;
+                  membresiaTK = 'TK CLASES' + tkPais;
             break;
             case 'COR':
                   membresiaTK = 'TK CORAZÓN' + tkPais;
@@ -882,12 +904,10 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         if(datosTKZN[i][3] == 'A' ){
           switch (datosTKZN[i][4]){
             case 'CLA':
-                  membresiaTK = 'TK CLASES (Antes llamada ABONO MENSUAL)';
+                  membresiaTK = 'TK CLASES';
             break;
             case 'COR':
                   membresiaTK = 'TK CORAZÓN';
-                  Logger.log('tkcorazon');
-
             break;
             case 'BEN':
                   membresiaTK = 'TK BENEFACTOR';
