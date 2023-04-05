@@ -7,9 +7,9 @@ function formateoPlanilla(){
   // Add a custom menu to the spreadsheet.
   SpreadsheetApp.getUi() // Or DocumentApp, SlidesApp, or FormApp.
       .createMenu('Menu CMKA')
-      .addItem('Recordatorio de pago', 'TestBiblRespuesta.recordatorioPago')
-      .addItem('Envío de confirmaciones', 'TestBiblRespuesta.envioLinksAConfirmados')
-      .addItem('Consultar mails restantes', 'TestBiblRespuesta.verificoCuotaMailsmsg')
+      .addItem('Recordatorio de pago', 'BibRespuestaAuto.recordatorioPago')
+      .addItem('Envío de confirmaciones', 'BibRespuestaAuto.envioLinksAConfirmados')
+      .addItem('Consultar mails restantes', 'BibRespuestaAuto.verificoCuotaMailsmsg')
       .addToUi();
 
   var ActiveSheet = SpreadsheetApp.getActiveSheet();
@@ -25,7 +25,6 @@ function formateoPlanilla(){
   // SI NO FORMATEO LA PLANILLA Y AGREGO COLUMNAS
   if (colTemporal == 0){
     var columColorAlerta = [ActiveCol+5, ActiveCol];
-    Logger.log(columColorAlerta);
     var columnas = ['Pendiente', 'Respuesta', 'Envio Info TKS', 'Membresía', 'Links Youtube', 'Pago', 'Recordatorio pago', 'Confirmación', 'NombreEvento', 'DatosEvento', 'Programa', 'FechaPago', 'Valor', 'Forma', 'Asistencia'];
     for(var i = 0; i < columnas.length; i++){
       ActiveSheet.insertColumnAfter(ActiveCol);
@@ -100,7 +99,7 @@ function procesoRespuestas(e, TituloEvento){
   };
   Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
   mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
-  Logger.log('primer chequeo de mail: ' + mail);
+  // Logger.log('primer chequeo de mail: ' + mail);
   if (mail == ""){
     mail = (buscoColumna(Preguntas.mailTK,sheet) != 0) ? valorPlanilla(Preguntas.mailTK) : "";
     completarDatos = true;
@@ -110,7 +109,7 @@ function procesoRespuestas(e, TituloEvento){
   Nombre = Nombre.trim();
   Apellido = Apellido.trim();
   mail = mail.trim().toLowerCase();
-  Logger.log('mail usuario: '+ mail);
+  // Logger.log('mail usuario: '+ mail);
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
   var eventoFinDeSemana = (buscoColumna(Preguntas.eventoFinDeSemana,sheet) != 0) ? valorPlanilla(Preguntas.eventoFinDeSemana) : "";
@@ -151,7 +150,7 @@ function procesoRespuestas(e, TituloEvento){
     }
   }
   var chequeoTKS = true;
-  Logger.log("evento por dia?" + eventoPorUnDia) ;
+  // Logger.log("evento por dia?" + eventoPorUnDia) ;
 
   //SI ES UN RETIRO DE VARIOS DÍAS ADMITE PAGO POR DÍA
   if (eventoPorDias != ""){
@@ -188,17 +187,17 @@ function procesoRespuestas(e, TituloEvento){
       break;
     }
   }
-    Logger.log(' tipotk: '+ TipoTKyAbono);
+    // Logger.log(' tipotk: '+ TipoTKyAbono);
 
   if(TipoTKyAbono == 'SI, TENGO TARJETA KADAMPA'){
-    Logger.log('pasa por if tipotk: '+ TipoTKyAbono);
+    // Logger.log('pasa por if tipotk: '+ TipoTKyAbono);
     var tieneTK = chequeoTkActiva(mail, datosMail, datosEvento, TipoTKyAbono, Pais);
       } else if(Pais == 'Uruguay'){
           tieneTK = 'SIN MEMBRESIA-UY';
         } else{
             tieneTK = 'SIN MEMBRESIA';
   }
-  Logger.log('resultado de membresía para determinar pago: '+ tieneTK);
+  // Logger.log('resultado de membresía para determinar pago: '+ tieneTK);
   if (chequeoTKS){
     switch (tieneTK)  {
       case 'TK CLASES':
@@ -258,7 +257,7 @@ function procesoRespuestas(e, TituloEvento){
         datosEvento.aPagarSoloEvento = datosEvento.aPagar;
       break;
       case 'VOY A PARTICIPAR DEL FIN DE SEMANA':
-        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del finde semana.<br>";
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del fin de semana.<br>";
         datosEvento.aPagar = (datosEvento[undia] != "") ? datosEvento[undia] : "0";
         datosEvento.botonPago = datosEvento[btn1dia];
         datosEvento.infoPrograma = datosEvento.programaFinDeSemana;
@@ -271,8 +270,8 @@ function procesoRespuestas(e, TituloEvento){
         datosEvento.aPagarSoloEvento = datosEvento.aPagar;
         sumoGrabaciones();
       break;
-        case 'VOY A PARTICIPAR DEINTRODUCCIÓN + DÍA DE LA INICIACIÓN':
-        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento por día.<br>";
+        case 'VOY A PARTICIPAR DE INTRODUCCIÓN E INICIACIÓN':
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar de la introducción e Iniciación.<br>";
         datosEvento.aPagar = (datosEvento[undia] != "") ? datosEvento[undia] : "0";
         datosEvento.botonPago = datosEvento[btn1dia];
         datosEvento.aPagarSoloEvento = datosEvento.aPagar;
@@ -571,7 +570,6 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
   var styleF22 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#3c4043'>";
   var styleF18 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#3c4043'>";
   var styleF18Blue = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#4575ec'>";
-  var styleF22Tab = "<span style='margin-left:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#3c4043'>";
   var styleF22Morado = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#a66cf5'>";
   var finStyle = "</span>";
     // emailBody is for those devices that can't render HTML, is plain text
@@ -770,7 +768,6 @@ function verificarModalidad(ModalidadElegida, datosEvento){
       datosEvento.LinkYoutube = "";
       datosEvento.TextoLink = ""; 
       datosEvento.AvisoOnline = "";
-      datosEvento.LugarEvento = "Serrano 1316, PALERMO";
     break;
     case "ONLINE":
       if (datosEvento.aPagar == 0){
@@ -844,13 +841,13 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   var sheetDatosTKCMKA = ss.getSheetByName("AÑO ACTUAL");
   var datosTKCMKA = sheetDatosTKCMKA.getRange(3, 1, sheetDatosTKCMKA.getLastRow(),9).getValues();
   var ss2 = SpreadsheetApp.openById('1glxhF229H3fuWPrpzExpPX1YPcXhGrY1-mBw8TfToMk');
-  var sheetDatosTKZN = ss2.getSheetByName('TK 2022');
+  var sheetDatosTKZN = ss2.getSheetByName('TK 2023');
   var datosTKZN = sheetDatosTKZN.getRange(3, 1, sheetDatosTKZN.getLastRow(), 9).getValues();
 
   if (Pais == 'Uruguay'){
     tkPais = '-UY';
   }
-  Logger.log('pasa por chequeo tk activa');
+  // Logger.log('pasa por chequeo tk activa');
   buscoPlanillaCMKA();
 
   function buscoPlanillaCMKA(){
@@ -858,7 +855,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
       correoPlanilla = datosTKCMKA[i][6].toString();
       correoPlanilla = correoPlanilla.trim().toLowerCase();
       if(correoPlanilla == correo){
-        Logger.log('chequeo mail en cmka tk '+ correoPlanilla + ' ' + correo);
+        // Logger.log('chequeo mail en cmka tk '+ correoPlanilla + ' ' + correo);
         datosEvento.NombreUsuario = datosTKCMKA[i][0];
         datosEvento.ApellidoUsuario = datosTKCMKA[i][1];
         datosEvento.MailUsuario = correoPlanilla;
@@ -889,7 +886,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
    if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == ''){
      buscoPlanillaZN();     
    }
-   Logger.log('termino de buscar en las dos planillas: '+ membresiaTK);
+  //  Logger.log('termino de buscar en las dos planillas: '+ membresiaTK);
   }
 
   function buscoPlanillaZN(){
@@ -991,21 +988,21 @@ function envioLinksAConfirmados(){
       if(i > 0){
         if(inscripcion[i][pendiente] == 0){
           textoPago = (inscripcion[i][pago]).toString().trim().toUpperCase();
-          Logger.log(textoPago);
+          // Logger.log(textoPago);
           if(textoPago == 'OK'){
             if(inscripcion[i][confirmacion] == ''){
               datosInscripcion = traigoDatosParticipante(i);
               datosCurso = traigoDatosCursos(tituloEvento);
-              Logger.log("tipo de insc " + datosInscripcion.eventoFinDeSemana);
+              // Logger.log("tipo de insc " + datosInscripcion.eventoFinDeSemana);
               if(datosInscripcion.eventoFinDeSemana == 'VOY A PARTICIPAR DEL FIN DE SEMANA'){
                 programa = datosCurso.programaFinDeSemana;
                 datosInscripcion.eventoFinDeSemana = "<br>Tu inscripción: " + datosInscripcion.eventoFinDeSemana;
               } else {
                 programa = datosCurso.programa;
               }
-              Logger.log(programa);
-              Logger.log(tituloEvento);
-              Logger.log(datosCurso.tipo);
+              // Logger.log(programa);
+              // Logger.log(tituloEvento);
+              // Logger.log(datosCurso.tipo);
               datosMail = CargoDatosMail();
               textoAcceso = chModalidad();
               if(datosCurso.tipo == "Reto 21 dias"){
@@ -1056,7 +1053,7 @@ function envioLinksAConfirmados(){
         }
       }
     }
-    Logger.log(infoPlanillaCurso);
+    // Logger.log(infoPlanillaCurso);
     return infoPlanillaCurso;
     function valorPlanillaC(valCampo, i, planilla){
       i +=2;
@@ -1191,13 +1188,13 @@ function traigoDatosCursos(){
       }
     }
 
-    Logger.log(infoPlanillaCurso.fechaEvento);
-    Logger.log(infoPlanillaCurso.horaEvento);
-    Logger.log(infoPlanillaCurso.lugarEvento);
-    Logger.log(infoPlanillaCurso.tipo);
-    Logger.log(infoPlanillaCurso.disponibilidad);
-    Logger.log(infoPlanillaCurso.asunto);
-    Logger.log(infoPlanillaCurso.programa);
+    // Logger.log(infoPlanillaCurso.fechaEvento);
+    // Logger.log(infoPlanillaCurso.horaEvento);
+    // Logger.log(infoPlanillaCurso.lugarEvento);
+    // Logger.log(infoPlanillaCurso.tipo);
+    // Logger.log(infoPlanillaCurso.disponibilidad);
+    // Logger.log(infoPlanillaCurso.asunto);
+    // Logger.log(infoPlanillaCurso.programa);
     return infoPlanillaCurso;
     function valorPlanillaC(valCampo, i, planilla){
       return sheetDatosCursos.getRange(i, buscoColumna(valCampo, planilla)).getValue();
@@ -1234,7 +1231,7 @@ function recordatorioPago(){
 
 function agregoNuevaPersonaNewsletter(personaSinTK){
   var persona = personaSinTK;
-  // PLANILLA INGRESOS NUEVOS - NEWSLETTER
+  // PLANILLA INGRESOS NUEVOS
   var ss = SpreadsheetApp.openById("1Vfu887gdGGpxttMbRlOMs7otTAMKrYYqHQhCi5aCMq8");
   var sheetDatosIngresos = ss.getSheetByName("INGRESOS");
   var DC = sheetDatosIngresos.getDataRange().getValues();
