@@ -288,7 +288,7 @@ function procesoRespuestas(e, TituloEvento){
   }
 
   function celebracionIniciacionSabado(){
-    if(datosEvento.Tipo = "Celebración"){
+    if(datosEvento.Tipo == "Celebración"){
               datosEvento.LinkYoutubePrograma = "";
               datosEvento.LinkYoutube = datosEvento.LinkYoutubeDiaSABADO;
     }
