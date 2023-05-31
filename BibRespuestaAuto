@@ -90,7 +90,7 @@ function procesoRespuestas(e, TituloEvento){
   var mail = "";
   var completarDatos = false;
   var infoTKAbono = (buscoColumna(Preguntas.infoTKAB,sheet) != 0) ? valorPlanilla(Preguntas.infoTKAB) : "";
-  var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "ARGENTINA";
+  var Pais = (buscoColumna(Preguntas.pais,sheet) != 0) ? valorPlanilla(Preguntas.pais) : "Argentina";
   var ModalidadElegida = (buscoColumna(Preguntas.modalidad,sheet) != 0) ? valorPlanilla(Preguntas.modalidad) : "PRESENCIAL";
 
   Nombre = (buscoColumna(Preguntas.nombre,sheet) != 0) ? valorPlanilla(Preguntas.nombre) : "";
@@ -102,7 +102,12 @@ function procesoRespuestas(e, TituloEvento){
   // Logger.log('primer chequeo de mail: ' + mail);
   if (mail == ""){
     mail = (buscoColumna(Preguntas.mailTK,sheet) != 0) ? valorPlanilla(Preguntas.mailTK) : "";
-    completarDatos = true;
+    if (ModalidadElegida == 'ONLINE'){
+      completarDatos = false;
+    } else {
+      completarDatos = true;
+    }
+    
   }
   var grabaciones = (buscoColumna(Preguntas.grabaciones,sheet) != 0) ? valorPlanilla(Preguntas.grabaciones) : "";
   //quito espacios de los ingresos de usuario
@@ -120,15 +125,24 @@ function procesoRespuestas(e, TituloEvento){
   if (eventoPorUnDia == ""){
     if (eventoFinDeSemana != ""){
       eventoPorUnDia = eventoFinDeSemana;
-    }
+    } else {
+      eventoPorUnDia = "VOY A PARTICIPAR DEL EVENTO COMPLETO";
+      }
   }
-
+Logger.log('eventoporundia? ' + eventoPorUnDia);
   var diasAParticipar = (buscoColumna(Preguntas.diasAParticipar,sheet) != 0) ? valorPlanilla(Preguntas.diasAParticipar) : "";
 
   /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
       DESDE LA HOJA CURSOS Y MAILINFO */
   var datosEvento = buscaCurso(TituloEvento, Pais);
-  var datosMail = CargoDatosMail();    
+  var datosMail = CargoDatosMail();  
+  
+  if(datosEvento.Modalidad == 'ONLINE'){
+   
+    if (TipoTKyAbono == "VALOR UNICO"){
+      TipoTKyAbono = "SI, TENGO TARJETA KADAMPA";
+    }
+  }
   /* FIN BUSQUEDA DE DATOS CURSOS Y MAILINFO */
   datosEvento.NombreUsuario = Nombre;
   datosEvento.ApellidoUsuario = Apellido;
@@ -159,6 +173,7 @@ function procesoRespuestas(e, TituloEvento){
       case 'VOY A PARTICIPAR POR DIA':
           chequeoTKS = false;
           datosEvento.LinkYoutube = '';
+          Logger.log('pasa por voy a part por dia');
           datosEvento.LinkYoutubePrograma = "";
           datosEvento.diasAParticipar = diasAParticipar;
           var diasSemana = ['VIERNES', 'SABADO', 'DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES'];
@@ -185,6 +200,7 @@ function procesoRespuestas(e, TituloEvento){
       break; 
       default:
       break;
+
     }
   }
     // Logger.log(' tipotk: '+ TipoTKyAbono);
@@ -228,9 +244,10 @@ function procesoRespuestas(e, TituloEvento){
         celebracionIniciacionSabado();
       break; 
       case 'SIN MEMBRESIA':
-        agregoNuevaPersonaNewsletter(mail);
+        // agregoNuevaPersonaNewsletter(mail);
         tkTipoInscripcion("Valor1Dia", "ValorEvento", "BotondePago1Dia", "botonPago");
         celebracionIniciacionSabado();
+        eventoNoAbierto(datosMail, datosEvento);
       break;
       case 'SIN MEMBRESIA-UY':
         tkTipoInscripcion("ValorDol1Dia", "ValorDolares", "BotonPagoDolares1Dia", "BotonPagoDolares");
@@ -264,6 +281,7 @@ function procesoRespuestas(e, TituloEvento){
         datosEvento.aPagarSoloEvento = datosEvento.aPagar;
       break;
       case 'VOY A PARTICIPAR DEL EVENTO COMPLETO':
+      Logger.log('pasa por even completo');
         datosEvento.aPagar = (datosEvento[completo] != "") ? datosEvento[completo] : "0";
         datosEvento.botonPago = datosEvento[btnCompleto];
         datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
@@ -300,18 +318,17 @@ function procesoRespuestas(e, TituloEvento){
     datosEvento = ArmoPago(datosEvento, datosMail);
     datosEvento.infoAcceso = datosMail[verificarModalidad(ModalidadElegida, datosEvento)];
   }
-
   function sumoGrabaciones(){
     if (grabaciones == 'Sí, quiero reservar las grabaciones'){
       if (Pais == 'Argentina'){
         grabaciones = "Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabaciones + "<br>";
-        datosEvento.aPagar += datosEvento.ValorGrabaciones;
+        datosEvento.aPagar += parseInt(datosEvento.ValorGrabaciones);
         // SE QUITÓ EL BOTÓN DE PAGO TEMPORAMENTE
           // + "<br><a href='"+ datosEvento.BotonPagoGrabaciones + 
           // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
       } else{
         grabaciones = "Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabacionesDol + "<br>";
-        datosEvento.aPagar += datosEvento.ValorGrabacionesDol;
+        datosEvento.aPagar += parseFloat(datosEvento.ValorGrabacionesDol);
         // SE QUITÓ EL BOTÓN DE PAGO TEMPORAMENTE
           // + "<br><a href='"+ datosEvento.BotonPagoDolGrabaciones + 
           // "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>"
@@ -406,11 +423,12 @@ function CargoDatosMail(){
         envioInfoTK:valorPlanilla('envioInfoTK'),
         infoPagoPaypal:valorPlanilla('infoPagoPaypal'),
         errorEnMembresia1:valorPlanilla('errorEnMembresia1'),
-        errorEnMembresia2:valorPlanilla('errorEnMembresia2')
+        errorEnMembresia2:valorPlanilla('errorEnMembresia2'),
+        infoEventoNoAbierto:valorPlanilla('EventoNoAbierto')
       };
     return infMail;
     function valorPlanilla(valCampo){
-      return sheetDatosMail.getRange(2, buscoColumna(valCampo,DM)).getValue()
+      return sheetDatosMail.getRange(2, buscoColumna(valCampo,DM)).getValue();
     }
 }
 
@@ -487,6 +505,8 @@ function buscaCurso(TituloEvento, Pais){
         Disponibilidad:valorPlanilla('Disponibilidad'), 
         LugarEvento:valorPlanilla('Lugar'),
         Modalidad:valorPlanilla('Modalidad'),
+        Abierto:valorPlanilla('Abierto'),
+        AplicaDesc:valorPlanilla('Aplica desc'),
         NombreUsuario: "",
         ApellidoUsuario: "",
         MailUsuario:"",
@@ -548,6 +568,7 @@ function buscaCurso(TituloEvento, Pais){
         TextoLink:"<strong>LINK DE ACCESO: </strong>",
         AvisoOnline:"<br><br><strong>La clase/sesión se activará el " + 
                     valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong><br>",
+        envioMail: true,
         Moneda:"$"
       };
     return infCurso;
@@ -565,159 +586,163 @@ function buscaCurso(TituloEvento, Pais){
 *** CALCÚLA SI HAY INVITADOS Y LES ENVÍA OTRO MAIL         ***
 *************************************************************/
 function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, ActiveSheet, ActiveRow, sheet, tieneTK, grabaciones, ModalidadElegida){
-  var styleF28 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
-  var styleF28White = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#ffffff'>";
-  var styleF22 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#3c4043'>";
-  var styleF18 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#3c4043'>";
-  var styleF18Blue = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#4575ec'>";
-  var styleF22Morado = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#a66cf5'>";
-  var finStyle = "</span>";
-    // emailBody is for those devices that can't render HTML, is plain text
-  var emailBody = "¡Hola! " + "\nGracias por tu inscripción al Curso " + TituloEvento + "\nen fecha " +
-        "\nPróximamente recibirás un email con más detalles sobre éste evento y tu información de pago." + "\nMuchas Gracias";
-  
-  // Armado de información del evento
-  var encabezadoMail = "<table width='720' border='0' align='center' bgcolor='white' cellpadding='0' cellspacing='0'>"+
-        "<tr bgcolor='#2784d6'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-Social4.png' alt='Social Media' width='720' usemap='#m_-6367196319079066917_Redes' title='CMKA Social' border='0' style='display:block'>"+
-            "<map name='m_-6367196319079066917_Redes' id='m_-6367196319079066917Redes'>"+
-            "<area shape='rect' coords='01,01,90,70'  href='https://www.facebook.com/meditarenargentina' alt='Facebook CMKA' target='_blank'>"+
-            "<area shape='rect' coords='92,01,188,70' href='https://www.instagram.com/meditarenargentina/' alt='Instagram CMKA' target='_blank'>"+
-            "<area shape='rect' coords='190,01,303,70' href='https://www.youtube.com/channel/UC8Bmrclk97g2onCsWRwZCyw' alt='Youtube CMKA' target='_blank'>"+
-            "<area shape='rect' coords='306,01,410,70' href='https://open.spotify.com/artist/0SKgzlnrfGPaeQfUUgDhb7/discography/album' alt='Spotify' target='_blank'>"+
-            "<area shape='rect' coords='412,01,512,70' href='https://api.whatsapp.com/send?phone=541161495976' alt='Whatsapp' target='_blank'>"+
-            "<area shape='rect' coords='515,01,616,70' href='https://twitter.com/meditarenarg' alt='Twitter CMKA' target='_blank'>"+
-            "<area shape='rect' coords='618,01,720,70' href='https://meditarenargentina.org/' alt='web Centro de meditación KadampaArgentina' target='_blank'>"+
-            "</map></td></tr><tr bgcolor='#fff'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-720x253-1.png' width='720' style='display:block' alt='Banner Header'>"+
-            "</td></tr><tr><td valign='middle' style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
-  var inicioPieMail = "</td></tr><tr height='150px' bgcolor='#4575ec'><td align='center' valign='middle' style='padding:0px 18px 40px 18px;'>" + styleF28White + datosMail.Saludo + finStyle ;
-  var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
-if(datosEvento.NombreEvento != ""){
-  datosEvento.NombreEvento = " - " + datosEvento.NombreEvento;
-}
-  var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong><br/>" + finStyle +
-    styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
-    datosEvento.NombreEvento + finStyle +
-    //styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
-    styleF18 + "<br/>Disponible por: " + datosEvento.Disponibilidad + finStyle +
-    styleF18 + "<br/>Lugar: " + finStyle + styleF18Blue + "<strong>" + datosEvento.LugarEvento + "</strong>" + finStyle;
-  
-  var saludoInicial = styleF28 + "¡Hola " + '<strong>' + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + "</strong>!" + finStyle;
-
-  if(datosEvento.LinkYoutubeDias != ""){
-    datosEvento.LinkYoutube = datosEvento.LinkYoutubeDias;
-    datosEvento.LinkYoutubePrograma = "";
-  }else if(datosEvento.LinkYoutubePrograma != ""){
-    datosEvento.LinkYoutube = datosEvento.LinkYoutubePrograma;
-  }else if(datosEvento.Tipo != "Celebración") {
-    separoLinksYoutube();
+  if(datosEvento.envioMail){
+    var styleF28 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
+    var styleF28White = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#ffffff'>";
+    var styleF22 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#3c4043'>";
+    var styleF18 = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#3c4043'>";
+    var styleF18Blue = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:18px;line-height:36px;color:#4575ec'>";
+    var styleF22Morado = "<span style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:22px;line-height:36px;color:#a66cf5'>";
+    var finStyle = "</span>";
+      // emailBody is for those devices that can't render HTML, is plain text
+    var emailBody = "¡Hola! " + "\nGracias por tu inscripción al Curso " + TituloEvento + "\nen fecha " +
+          "\nPróximamente recibirás un email con más detalles sobre éste evento y tu información de pago." + "\nMuchas Gracias";
+    
+    // Armado de información del evento
+    var encabezadoMail = "<table width='720' border='0' align='center' bgcolor='white' cellpadding='0' cellspacing='0'>"+
+          "<tr bgcolor='#2784d6'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-Social4.png' alt='Social Media' width='720' usemap='#m_-6367196319079066917_Redes' title='CMKA Social' border='0' style='display:block'>"+
+              "<map name='m_-6367196319079066917_Redes' id='m_-6367196319079066917Redes'>"+
+              "<area shape='rect' coords='01,01,90,70'  href='https://www.facebook.com/meditarenargentina' alt='Facebook CMKA' target='_blank'>"+
+              "<area shape='rect' coords='92,01,188,70' href='https://www.instagram.com/meditarenargentina/' alt='Instagram CMKA' target='_blank'>"+
+              "<area shape='rect' coords='190,01,303,70' href='https://www.youtube.com/channel/UC8Bmrclk97g2onCsWRwZCyw' alt='Youtube CMKA' target='_blank'>"+
+              "<area shape='rect' coords='306,01,410,70' href='https://open.spotify.com/artist/0SKgzlnrfGPaeQfUUgDhb7/discography/album' alt='Spotify' target='_blank'>"+
+              "<area shape='rect' coords='412,01,512,70' href='https://api.whatsapp.com/send?phone=541161495976' alt='Whatsapp' target='_blank'>"+
+              "<area shape='rect' coords='515,01,616,70' href='https://twitter.com/meditarenarg' alt='Twitter CMKA' target='_blank'>"+
+              "<area shape='rect' coords='618,01,720,70' href='https://meditarenargentina.org/' alt='web Centro de meditación KadampaArgentina' target='_blank'>"+
+              "</map></td></tr><tr bgcolor='#fff'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-720x253-1.png' width='720' style='display:block' alt='Banner Header'>"+
+              "</td></tr><tr><td valign='middle' style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
+    var inicioPieMail = "</td></tr><tr height='150px' bgcolor='#4575ec'><td align='center' valign='middle' style='padding:0px 18px 40px 18px;'>" + styleF28White + datosMail.Saludo + finStyle ;
+    var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
+  if(datosEvento.NombreEvento != ""){
+    datosEvento.NombreEvento = " - " + datosEvento.NombreEvento;
   }
+    var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong><br/>" + finStyle +
+      styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
+      datosEvento.NombreEvento + finStyle +
+      //styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
+      styleF18 + "<br/>Disponible por: " + datosEvento.Disponibilidad + finStyle +
+      styleF18 + "<br/>Lugar: " + finStyle + styleF18Blue + "<strong>" + datosEvento.LugarEvento + "</strong>" + finStyle;
+    
+    var saludoInicial = styleF28 + "¡Hola " + '<strong>' + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + "</strong>!" + finStyle;
+Logger.log('you programa' + datosEvento.LinkYoutubePrograma);
+    if(datosEvento.LinkYoutubeDias != ""){
+      datosEvento.LinkYoutube = datosEvento.LinkYoutubeDias;
+      datosEvento.LinkYoutubePrograma = "";
+      Logger.log('pasa por dias');
+    }else if(datosEvento.LinkYoutubePrograma != ""){
+      datosEvento.LinkYoutube = datosEvento.LinkYoutubePrograma;
+    }else if(datosEvento.Tipo != "Celebración") {
+      separoLinksYoutube();
+    }
 
-  if (datosEvento.aPagar > 0){    
-    if(datosEvento.Modalidad == "PRESENCIALMENTE"){
+    if (datosEvento.aPagar > 0){    
+      if(datosEvento.Modalidad == "PRESENCIALMENTE"){
+        datosEvento.LinkYoutube = "";
+        datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
+        ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
+      }
+      if(datosEvento.Tipo == "Reto 21 dias"){
+        datosEvento.webDelEvento = "";
+      }
+      ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
+      ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue(datosEvento.LinkYoutube);
+      ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('CH');
+      var nombreEvento = ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).getValue();
+      var datosPlanillaEventoOnl = ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).getValue();
+      var datosPlanillaEventoPre = ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).getValue();
+      var planillaPrograma = ActiveSheet.getRange(2, buscoColumna('Programa',sheet)).getValue();
+      if (nombreEvento == ""){
+        ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).setValue(TituloEvento);
+      }
+      if (datosPlanillaEventoOnl == ""){
+        if(ModalidadElegida == "ONLINE"){
+          ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
+        }
+      }
+      if (datosPlanillaEventoPre == ""){
+        if(ModalidadElegida == "PRESENCIAL"){
+          ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
+        }
+      } 
+      if (planillaPrograma == ""){
+        ActiveSheet.getRange(2, buscoColumna('Programa',sheet)).setValue(datosEvento.infoPrograma);
+      }
+      datosEvento.TextoLink = "";
+      datosEvento.AvisoOnline = "";
+      datosEvento.LinkYoutube = "";
+    }else{
+      ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
+      ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('NO');
+      if(datosEvento.Modalidad == "PRESENCIALMENTE"){
+      datosEvento.TextoLink = "";
+      datosEvento.AvisoOnline = "";
       datosEvento.LinkYoutube = "";
       datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
       ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
+      }
     }
     if(datosEvento.Tipo == "Reto 21 dias"){
-      datosEvento.webDelEvento = "";
+      datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
+      datosEvento.AvisoOnline = "";
+      datosEvento.TextoLink = "";
+      ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
     }
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue(datosEvento.LinkYoutube);
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('CH');
-    var nombreEvento = ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).getValue();
-    var datosPlanillaEventoOnl = ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).getValue();
-    var datosPlanillaEventoPre = ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).getValue();
-    var planillaPrograma = ActiveSheet.getRange(2, buscoColumna('Programa',sheet)).getValue();
-    if (nombreEvento == ""){
-      ActiveSheet.getRange(2, buscoColumna('NombreEvento',sheet)).setValue(TituloEvento);
-    }
-    if (datosPlanillaEventoOnl == ""){
-      if(ModalidadElegida == "ONLINE"){
-        ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
+    var mailEnviar = verificoCuotaMails();
+    if(mailEnviar == "ENVIADA"){
+      var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
+        styleF22Morado + datosEvento.textoInscPorDia + finStyle +
+        styleF22 + datosEvento.LineasDePago + finStyle +
+        styleF22 + 'Valor con descuento aplicado por membresía ' + finStyle + styleF22Morado + tieneTK + ': ' +
+          datosEvento.Moneda + datosEvento.aPagarSoloEvento + '<br>' + finStyle +
+        styleF22 + grabaciones + finStyle +
+        styleF22Morado + '<br><strong>Total a abonar: ' + datosEvento.Moneda + datosEvento.aPagar + '</strong><br>' + finStyle +
+        styleF22 + datosEvento.textoErrorMembresia + finStyle + 
+        styleF22 + datosEvento.pagoTransfer + finStyle + 
+        DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF22Morado + datosEvento.webDelEvento + finStyle +
+        styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + datosEvento.TextoLink + finStyle + 
+        styleF18Blue + datosEvento.LinkYoutube + finStyle + styleF22Morado + datosEvento.AvisoOnline + finStyle +
+        styleF18 + datosMail.Dudas + finStyle + inicioPieMail + finPieMail;
+
+      // More info for Advanced Options Parameters 
+      // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
+      var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+      MailApp.sendEmail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
+
+      if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
+        var htmlBodyinvitado =  encabezadoMail + "¡Hola " + "<strong>" +
+        claseInvitacion.invitadoNombre + "</strong>" + "!" + "<br/><br/>Te contamos que " 
+        + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + " te invitó a una clase de meditación <br/>" + 
+        " por el día del amigo! <br/>" + "<br/><br/><strong>INFORMACIÓN IMPORTANTE: </strong><br/>" +
+        DatosEvento + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
+        datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + datosMail.Saludo + finPieMail;
+        var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBodyinvitado};
+        MailApp.sendEmail(claseInvitacion.invitadoMail, claseInvitacion.invitadoSubject, emailBody, advancedOpts);
+        ActiveSheet.getRange(ActiveRow, buscoColumna('Dirección de correo electrónico INVITADO/A',sheet))
+        .setBackground('green').setFontColor('white');
       }
     }
-    if (datosPlanillaEventoPre == ""){
-      if(ModalidadElegida == "PRESENCIAL"){
-        ActiveSheet.getRange(2, buscoColumna('DatosEvento',sheet)).setValue(DatosEvento);
+    
+    // SI HAY MÁS DE UN VÍNCULO DE YOUTUBE LOS SEPARO EN PARTES CON SUS VÍNCULOS
+    function separoLinksYoutube(){
+      var vinculosYoutube = datosEvento.LinkYoutube.split(";");
+      if (vinculosYoutube.length > 1) {
+        datosEvento.LinkYoutube = "";
+        vinculosYoutube.forEach( function(value, indice, array) {
+          if(vinculosYoutube[indice] != ""){
+            datosEvento.LinkYoutube += "<P><strong> Sesión " + (indice+1) +
+                                        ": </strong><a href='" + vinculosYoutube[indice] + "'>" + 
+                                        vinculosYoutube[indice] + "</a></p>";
+          }
+        });
+      } else{
+        datosEvento.LinkYoutube = "<a href='" + datosEvento.LinkYoutube + "'>" + datosEvento.LinkYoutube + "</a>";
       }
-    } 
-    if (planillaPrograma == ""){
-      ActiveSheet.getRange(2, buscoColumna('Programa',sheet)).setValue(datosEvento.infoPrograma);
     }
-    datosEvento.TextoLink = "";
-    datosEvento.AvisoOnline = "";
-    datosEvento.LinkYoutube = "";
-  }else{
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Pago',sheet)).setValue('NO');
-    if(datosEvento.Modalidad == "PRESENCIALMENTE"){
-    datosEvento.TextoLink = "";
-    datosEvento.AvisoOnline = "";
-    datosEvento.LinkYoutube = "";
-    datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
-    }
+    return mailEnviar;
   }
-  if(datosEvento.Tipo == "Reto 21 dias"){
-    datosEvento.infoAcceso = datosMail.infoAccesoPresencialSinLink;
-    datosEvento.AvisoOnline = "";
-    datosEvento.TextoLink = "";
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
-  }
-  var mailEnviar = verificoCuotaMails();
-  if(mailEnviar == "ENVIADA"){
-    var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
-      styleF22Morado + datosEvento.textoInscPorDia + finStyle +
-      styleF22 + datosEvento.LineasDePago + finStyle +
-      styleF22 + 'Valor con descuento aplicado por membresía ' + finStyle + styleF22Morado + tieneTK + ': ' +
-        datosEvento.Moneda + datosEvento.aPagarSoloEvento + '<br>' + finStyle +
-      styleF22 + grabaciones + finStyle +
-      styleF22Morado + '<br><strong>Total a abonar: ' + datosEvento.Moneda + datosEvento.aPagar + '</strong><br>' + finStyle +
-      styleF22 + datosEvento.textoErrorMembresia + finStyle + 
-      styleF22 + datosEvento.pagoTransfer + finStyle + 
-      DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF22Morado + datosEvento.webDelEvento + finStyle +
-      styleF18 + datosEvento.infoAcceso + finStyle + styleF18 + datosEvento.TextoLink + finStyle + 
-      styleF18Blue + datosEvento.LinkYoutube + finStyle + styleF22Morado + datosEvento.AvisoOnline + finStyle +
-      styleF18 + datosMail.Dudas + finStyle + inicioPieMail + finPieMail;
-
-    // More info for Advanced Options Parameters 
-    // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
-    var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
-    MailApp.sendEmail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
-
-    if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
-      var htmlBodyinvitado =  encabezadoMail + "¡Hola " + "<strong>" +
-      claseInvitacion.invitadoNombre + "</strong>" + "!" + "<br/><br/>Te contamos que " 
-      + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + " te invitó a una clase de meditación <br/>" + 
-      " por el día del amigo! <br/>" + "<br/><br/><strong>INFORMACIÓN IMPORTANTE: </strong><br/>" +
-      DatosEvento + datosEvento.infoAcceso  + datosEvento.TextoLink + datosEvento.LinkYoutube +
-      datosEvento.AvisoOnline + datosMail.Dudas + inicioPieMail + datosMail.Saludo + finPieMail;
-      var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBodyinvitado};
-      MailApp.sendEmail(claseInvitacion.invitadoMail, claseInvitacion.invitadoSubject, emailBody, advancedOpts);
-      ActiveSheet.getRange(ActiveRow, buscoColumna('Dirección de correo electrónico INVITADO/A',sheet))
-      .setBackground('green').setFontColor('white');
-    }
-  }
-  
-  // SI HAY MÁS DE UN VÍNCULO DE YOUTUBE LOS SEPARO EN PARTES CON SUS VÍNCULOS
-  function separoLinksYoutube(){
-    var vinculosYoutube = datosEvento.LinkYoutube.split(";");
-    if (vinculosYoutube.length > 1) {
-      datosEvento.LinkYoutube = "";
-      vinculosYoutube.forEach( function(value, indice, array) {
-        if(vinculosYoutube[indice] != ""){
-          datosEvento.LinkYoutube += "<P><strong> Sesión " + (indice+1) +
-                                      ": </strong><a href='" + vinculosYoutube[indice] + "'>" + 
-                                      vinculosYoutube[indice] + "</a></p>";
-        }
-      });
-    } else{
-      datosEvento.LinkYoutube = "<a href='" + datosEvento.LinkYoutube + "'>" + datosEvento.LinkYoutube + "</a>";
-    }
-  }
-  return mailEnviar;
+  ActiveSheet.getRange(ActiveRow, buscoColumna('Membresía',sheet)).setValue(tieneTK);
+  return 'NO REGISTRADO';
 }
-
 /*************************************************************
 *** ARMA LOS DATOS DE PAGO SEGÚN TK                        ***
 *** SI TIENE EL EVENTO INCLIÚDO LE CONFIRMA LA INSCRIPCIÓN ***
@@ -839,7 +864,9 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   var tkPais = "";
   var ss = SpreadsheetApp.openById('10K7j0GEVjHX2BcKXHEsCgpE7LKtCZbZzvNVgQEshDZk');
   var sheetDatosTKCMKA = ss.getSheetByName("AÑO ACTUAL");
+  var sheetDatosTKCOR = ss.getSheetByName("CÓRDOBA");
   var datosTKCMKA = sheetDatosTKCMKA.getRange(3, 1, sheetDatosTKCMKA.getLastRow(),9).getValues();
+   var datosTKCOR = sheetDatosTKCOR.getRange(3, 1, sheetDatosTKCOR.getLastRow(),9).getValues();
   var ss2 = SpreadsheetApp.openById('1glxhF229H3fuWPrpzExpPX1YPcXhGrY1-mBw8TfToMk');
   var sheetDatosTKZN = ss2.getSheetByName('TK 2023');
   var datosTKZN = sheetDatosTKZN.getRange(3, 1, sheetDatosTKZN.getLastRow(), 9).getValues();
@@ -847,7 +874,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   if (Pais == 'Uruguay'){
     tkPais = '-UY';
   }
-  // Logger.log('pasa por chequeo tk activa');
+  Logger.log('pasa por chequeo tk activa');
   buscoPlanillaCMKA();
 
   function buscoPlanillaCMKA(){
@@ -871,9 +898,6 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
             case 'BEN':
                   membresiaTK = 'TK BENEFACTOR' + tkPais;
             break;
-            case 'ONL':
-                  membresiaTK = 'TK ONLINE' + tkPais;
-            break;
             default:
               membresiaTK = 'SIN MEMBRESIA' + tkPais;
             break;
@@ -882,11 +906,20 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
           membresiaTK = 'SIN MEMBRESIA' + tkPais;
         }
       }
-   }
-   if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == ''){
-     buscoPlanillaZN();     
-   }
-  //  Logger.log('termino de buscar en las dos planillas: '+ membresiaTK);
+    }
+    if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == ''){
+      if(datosEvento.AplicaDesc == 'P'){
+      } else{
+        if(datosEvento.AplicaDesc == 'P C ZN'){
+          buscoPlanillaZN();  
+          Logger.log('hasta cor ' + membresiaTK);
+          if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == ''){
+            buscoPlanillaCOR();
+          }
+        }
+      }
+    }
+    Logger.log('termino de buscar en las tres planillas: '+ membresiaTK);
   }
 
   function buscoPlanillaZN(){
@@ -897,7 +930,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         datosEvento.NombreUsuario = datosTKZN[i][1];
         datosEvento.ApellidoUsuario = datosTKZN[i][2];
         datosEvento.MailUsuario = correoPlanilla;
-        datosEvento.TelefonoUsuario = datosTKZN[i][6];
+        datosEvento.TelefonoUsuario = datosTKZN[i][7];
         if(datosTKZN[i][3] == 'A' ){
           switch (datosTKZN[i][4]){
             case 'CLA':
@@ -918,7 +951,46 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         }
       } 
     }
+    if (membresiaTK == ''){
+      membresiaTK = 'SIN MEMBRESIA'  + tkPais;
+    }
   }
+
+  function buscoPlanillaCOR(){
+    for(var i = 0;i<datosTKCOR.length; i++){
+      correoPlanilla = datosTKCOR[i][6].toString();
+      correoPlanilla = correoPlanilla.trim().toLowerCase();
+      if(correoPlanilla == correo){
+        datosEvento.NombreUsuario = datosTKCOR[i][0];
+        datosEvento.ApellidoUsuario = datosTKCOR[i][1];
+        datosEvento.MailUsuario = correoPlanilla;
+        datosEvento.TelefonoUsuario = datosTKCOR[i][6];
+        if(datosTKCOR[i][2] == 'A' ){
+          switch (datosTKCOR[i][3]){
+            case 'CLA':
+                  membresiaTK = 'TK CLASES';
+            break;
+            case 'COR':
+            Logger.log('pasa por cor cord');
+                  membresiaTK = 'TK CORAZÓN';
+            break;
+            case 'BEN':
+                  membresiaTK = 'TK BENEFACTOR';
+            break;
+            default:
+              membresiaTK = 'SIN MEMBRESIA';
+            break;
+          }
+        } else {
+          membresiaTK = 'SIN MEMBRESIA';
+        }
+      } 
+    }
+    if (membresiaTK == ''){
+      membresiaTK = 'SIN MEMBRESIA'  + tkPais;
+    }
+  }
+
   if (membresiaTK == ""){
     membresiaTK = 'SIN MEMBRESIA' + tkPais;
   }
@@ -1240,8 +1312,29 @@ function agregoNuevaPersonaNewsletter(personaSinTK){
   function esNueva(){
     
   }
+}
 
+function eventoNoAbierto(datosMail, datosEvento){
+  if(datosEvento.Abierto == 'Sólo TK'){
+    datosEvento.envioMail = false;
+    var subject = "Inscripción no válida sin membresía";
+    var emailBody = "";
+    var partesMail = encabezadoyPieMail(datosMail);
+    var saludoInicial = "¡Hola!";
+    
+    var htmlBody = `${partesMail.encabezadoMail}
+    ${saludoInicial}<br><br>
+    Tu inscripción a "${datosEvento.NombreEvento}" no pudo ser completada.<br>
+    ${datosMail.infoEventoNoAbierto}<br><br>
 
+    ${partesMail.pieMail}<br>`;
+    // Logger.log(htmlBody);
+    Logger.log(datosMail.infoEventoNoAbierto);
+    // ${e.styleF18}${datosMail.eventoNoAbierto}${e.finStyle}
+    var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+    MailApp.sendEmail(datosEvento.MailUsuario, subject, emailBody, advancedOpts);
+    datosEvento.aPagar = '-';
+  }
 }
 /**************************************************************
 *** AGREGAR EL SIGUIENTE BLOQUE DE CÓDIGO EN EL APPS SCRIPT ***
