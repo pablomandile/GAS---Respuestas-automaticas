@@ -102,12 +102,7 @@ function procesoRespuestas(e, TituloEvento){
   // Logger.log('primer chequeo de mail: ' + mail);
   if (mail == ""){
     mail = (buscoColumna(Preguntas.mailTK,sheet) != 0) ? valorPlanilla(Preguntas.mailTK) : "";
-    if (ModalidadElegida == 'ONLINE'){
-      completarDatos = false;
-    } else {
-      completarDatos = true;
-    }
-    
+    completarDatos = true;
   }
   var grabaciones = (buscoColumna(Preguntas.grabaciones,sheet) != 0) ? valorPlanilla(Preguntas.grabaciones) : "";
   //quito espacios de los ingresos de usuario
@@ -129,7 +124,7 @@ function procesoRespuestas(e, TituloEvento){
       eventoPorUnDia = "VOY A PARTICIPAR DEL EVENTO COMPLETO";
       }
   }
-Logger.log('eventoporundia? ' + eventoPorUnDia);
+  Logger.log('eventoporundia? ' + eventoPorUnDia);
   var diasAParticipar = (buscoColumna(Preguntas.diasAParticipar,sheet) != 0) ? valorPlanilla(Preguntas.diasAParticipar) : "";
 
   /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
@@ -138,7 +133,6 @@ Logger.log('eventoporundia? ' + eventoPorUnDia);
   var datosMail = CargoDatosMail();  
   
   if(datosEvento.Modalidad == 'ONLINE'){
-   
     if (TipoTKyAbono == "VALOR UNICO"){
       TipoTKyAbono = "SI, TENGO TARJETA KADAMPA";
     }
@@ -150,6 +144,9 @@ Logger.log('eventoporundia? ' + eventoPorUnDia);
   if(datosEvento.Modalidad == "ONLINE"){
     ModalidadElegida = "ONLINE";
   }
+
+  Logger.log('mod1: ' + ModalidadElegida);
+  Logger.log('lugar1: ' + datosEvento.LugarEvento);
   if (datosEvento.Tipo == "Clase día del Amigo 2x1"){
     var claseInvitacion = {
       invitadoNombre : (buscoColumna(Preguntas.invitadoNombre,sheet) != 0) ? valorPlanilla(Preguntas.invitadoNombre) : "",
@@ -284,7 +281,7 @@ Logger.log('eventoporundia? ' + eventoPorUnDia);
       Logger.log('pasa por even completo');
         datosEvento.aPagar = (datosEvento[completo] != "") ? datosEvento[completo] : "0";
         datosEvento.botonPago = datosEvento[btnCompleto];
-        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo y " + ModalidadElegida + ".<br>";
         datosEvento.aPagarSoloEvento = datosEvento.aPagar;
         sumoGrabaciones();
       break;
@@ -298,7 +295,7 @@ Logger.log('eventoporundia? ' + eventoPorUnDia);
       default:
         datosEvento.aPagar = (datosEvento[completo] != "") ? datosEvento[completo] : "0";
         datosEvento.botonPago = datosEvento[btnCompleto];
-        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo.<br>";
+        datosEvento.textoInscPorDia = "<br>Te inscribiste para participar del evento completo y " + ModalidadElegida + ".<br>";
         datosEvento.aPagarSoloEvento = datosEvento.aPagar;
         sumoGrabaciones();
       break;
@@ -381,6 +378,12 @@ Logger.log('eventoporundia? ' + eventoPorUnDia);
   ***              FIN CÓDIGO FUNCIÓN PRINCIPAL              ***
   ***                                                        ***
   *************************************************************/
+
+function separoModalidadEnSolapas(datosEvento){
+  if (datosEvento.modalidad == 'PRESENCIAL U ONLINE'){
+    
+  }
+}
 
 /*************************************************************
 *** CHEQUEA LA FECHA PARA SABER SI ESTÁ ACTIVO EL FORM     ***
@@ -497,6 +500,8 @@ function buscaCurso(TituloEvento, Pais){
         aPagar:ValorEvento, 
         aPagarSoloEvento: "",
         Asunto:TituloEvento,
+        sinDescG:SinDescuentoG,
+        sinDescGDol: SinDescuentoDol,
         NombreEvento: valorPlanilla('Título'),
         subject:"",
         FechaEvento:valorPlanilla('Fecha'), 
@@ -555,6 +560,7 @@ function buscaCurso(TituloEvento, Pais){
         cantDiasElegidos : 0,
         textoInscPorDia : "",
         textoErrorMembresia: "",
+        infoFechaDescuento: infoFechaDescuento,
         webDelEvento: valorPlanilla('WEB del Evento'),
         LinkYoutube: valorPlanilla('LinkYoutube'),
         LinkYoutubePrograma: valorPlanilla('LinkYoutube Programa'),
@@ -565,9 +571,8 @@ function buscaCurso(TituloEvento, Pais){
         LinkYoutubeDiaDOMINGO:valorPlanilla('LinkYoutube DiaDomingo'),
         LinkYoutubeDiaLUNES:valorPlanilla('LinkYoutube DiaLunes'),
         LinkYoutubeDiaMARTES:valorPlanilla('LinkYoutube DiaMartes'),
-        TextoLink:"<strong>LINK DE ACCESO: </strong>",
-        AvisoOnline:"<br><br><strong>La clase/sesión se activará el " + 
-                    valorPlanilla('Fecha') + " " + valorPlanilla('Hora') + "</strong><br>",
+        TextoLink:"",
+        AvisoOnline:"",
         envioMail: true,
         Moneda:"$"
       };
@@ -613,18 +618,18 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
               "</td></tr><tr><td valign='middle' style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
     var inicioPieMail = "</td></tr><tr height='150px' bgcolor='#4575ec'><td align='center' valign='middle' style='padding:0px 18px 40px 18px;'>" + styleF28White + datosMail.Saludo + finStyle ;
     var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
-  if(datosEvento.NombreEvento != ""){
-    datosEvento.NombreEvento = " - " + datosEvento.NombreEvento;
-  }
+    if(datosEvento.NombreEvento != ""){
+      datosEvento.NombreEvento = " - " + datosEvento.NombreEvento;
+    }
     var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong><br/>" + finStyle +
       styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
       datosEvento.NombreEvento + finStyle +
       //styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
-      styleF18 + "<br/>Disponible por: " + datosEvento.Disponibilidad + finStyle +
+      styleF18 + datosEvento.Disponibilidad + finStyle +
       styleF18 + "<br/>Lugar: " + finStyle + styleF18Blue + "<strong>" + datosEvento.LugarEvento + "</strong>" + finStyle;
     
     var saludoInicial = styleF28 + "¡Hola " + '<strong>' + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + "</strong>!" + finStyle;
-Logger.log('you programa' + datosEvento.LinkYoutubePrograma);
+    Logger.log('youtube programa' + datosEvento.LinkYoutubePrograma);
     if(datosEvento.LinkYoutubeDias != ""){
       datosEvento.LinkYoutube = datosEvento.LinkYoutubeDias;
       datosEvento.LinkYoutubePrograma = "";
@@ -688,14 +693,29 @@ Logger.log('you programa' + datosEvento.LinkYoutubePrograma);
       ActiveSheet.getRange(ActiveRow, buscoColumna('Links Youtube',sheet)).setValue('');
     }
     var mailEnviar = verificoCuotaMails();
+    let membresia = '';
+    let validez = finStyle;
+    if(tieneTK != 'SIN MEMBRESIA' & tieneTK != 'SIN MEMBRESIA-UY'){
+      membresia = styleF22 + 'Valor con descuento aplicado por membresía ' + finStyle + styleF22Morado + tieneTK + ': ' +
+          datosEvento.Moneda + datosEvento.aPagarSoloEvento + '<br>' + finStyle;
+    }
+    if (datosEvento.infoFechaDescuento != ''){
+      let textoFechaDesc = datosEvento.infoFechaDescuento.toLocaleDateString('es-AR', { month: 'short', day: '2-digit', year: 'numeric' });
+      // validez = " (Válido hasta: " + textoFechaDesc + ")<br>"
+      + finStyle;
+      if(datosEvento.Moneda == 'USD'){
+        datosEvento.sinDescG = datosEvento.sinDescGDol;
+      }
+      validez = " (Válido hasta: " + textoFechaDesc + ")<br>" + finStyle + styleF22 + 'Abonando después de esa fecha el valor es de '+ 
+      datosEvento.Moneda + datosEvento.sinDescG + ' para todas las membresías.' + finStyle;
+    }
     if(mailEnviar == "ENVIADA"){
       var htmlBody =  encabezadoMail + saludoInicial + styleF22 + datosEvento.TextoInicial + finStyle + 
         styleF22Morado + datosEvento.textoInscPorDia + finStyle +
         styleF22 + datosEvento.LineasDePago + finStyle +
-        styleF22 + 'Valor con descuento aplicado por membresía ' + finStyle + styleF22Morado + tieneTK + ': ' +
-          datosEvento.Moneda + datosEvento.aPagarSoloEvento + '<br>' + finStyle +
+        membresia +
         styleF22 + grabaciones + finStyle +
-        styleF22Morado + '<br><strong>Total a abonar: ' + datosEvento.Moneda + datosEvento.aPagar + '</strong><br>' + finStyle +
+        styleF22Morado + '<br><strong>Total a abonar: ' + datosEvento.Moneda + datosEvento.aPagar + '</strong> ' + validez + '<br>' +
         styleF22 + datosEvento.textoErrorMembresia + finStyle + 
         styleF22 + datosEvento.pagoTransfer + finStyle + 
         DatosEvento + styleF18 + datosEvento.infoPrograma + finStyle + styleF22Morado + datosEvento.webDelEvento + finStyle +
@@ -707,7 +727,6 @@ Logger.log('you programa' + datosEvento.LinkYoutubePrograma);
       // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
       var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
       MailApp.sendEmail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
-
       if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
         var htmlBodyinvitado =  encabezadoMail + "¡Hola " + "<strong>" +
         claseInvitacion.invitadoNombre + "</strong>" + "!" + "<br/><br/>Te contamos que " 
@@ -793,6 +812,7 @@ function verificarModalidad(ModalidadElegida, datosEvento){
       datosEvento.LinkYoutube = "";
       datosEvento.TextoLink = ""; 
       datosEvento.AvisoOnline = "";
+      datosEvento.Disponibilidad = '';
     break;
     case "ONLINE":
       if (datosEvento.aPagar == 0){
@@ -809,6 +829,7 @@ function verificarModalidad(ModalidadElegida, datosEvento){
         }
       }
       datosEvento.LugarEvento = "ONLINE";
+      datosEvento.Disponibilidad = "<br/>Disponibilidad: " + datosEvento.Disponibilidad;
     break; 
     default:
       infoAcceso = "infoAccesoOnline";
@@ -1260,13 +1281,6 @@ function traigoDatosCursos(){
       }
     }
 
-    // Logger.log(infoPlanillaCurso.fechaEvento);
-    // Logger.log(infoPlanillaCurso.horaEvento);
-    // Logger.log(infoPlanillaCurso.lugarEvento);
-    // Logger.log(infoPlanillaCurso.tipo);
-    // Logger.log(infoPlanillaCurso.disponibilidad);
-    // Logger.log(infoPlanillaCurso.asunto);
-    // Logger.log(infoPlanillaCurso.programa);
     return infoPlanillaCurso;
     function valorPlanillaC(valCampo, i, planilla){
       return sheetDatosCursos.getRange(i, buscoColumna(valCampo, planilla)).getValue();
