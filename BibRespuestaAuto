@@ -99,7 +99,6 @@ function procesoRespuestas(e, TituloEvento){
   };
   Apellido = (buscoColumna(Preguntas.apellido,sheet) != 0) ? valorPlanilla(Preguntas.apellido) : "";
   mail = (buscoColumna(Preguntas.mail,sheet) != 0) ? valorPlanilla(Preguntas.mail) : "";
-  // Logger.log('primer chequeo de mail: ' + mail);
   if (mail == ""){
     mail = (buscoColumna(Preguntas.mailTK,sheet) != 0) ? valorPlanilla(Preguntas.mailTK) : "";
     completarDatos = true;
@@ -109,7 +108,6 @@ function procesoRespuestas(e, TituloEvento){
   Nombre = Nombre.trim();
   Apellido = Apellido.trim();
   mail = mail.trim().toLowerCase();
-  // Logger.log('mail usuario: '+ mail);
   var TipoTKyAbono = (buscoColumna(Preguntas.tarjetasyabono,sheet) != 0) ? valorPlanilla(Preguntas.tarjetasyabono) : "VALOR UNICO";
   var eventoPorDias = (buscoColumna(Preguntas.eventoPorDias,sheet) != 0) ? valorPlanilla(Preguntas.eventoPorDias) : "";
   var eventoFinDeSemana = (buscoColumna(Preguntas.eventoFinDeSemana,sheet) != 0) ? valorPlanilla(Preguntas.eventoFinDeSemana) : "";
@@ -124,7 +122,6 @@ function procesoRespuestas(e, TituloEvento){
       eventoPorUnDia = "VOY A PARTICIPAR DEL EVENTO COMPLETO";
       }
   }
-  Logger.log('eventoporundia? ' + eventoPorUnDia);
   var diasAParticipar = (buscoColumna(Preguntas.diasAParticipar,sheet) != 0) ? valorPlanilla(Preguntas.diasAParticipar) : "";
 
   /* FUNCIONES DE BUSQUEDA DE DATOS EN PLANILLA INFORMACIÓN DE CURSOS
@@ -143,10 +140,9 @@ function procesoRespuestas(e, TituloEvento){
   datosEvento.MailUsuario = mail;
   if(datosEvento.Modalidad == "ONLINE"){
     ModalidadElegida = "ONLINE";
+    completarDatos = false;
   }
 
-  Logger.log('mod1: ' + ModalidadElegida);
-  Logger.log('lugar1: ' + datosEvento.LugarEvento);
   if (datosEvento.Tipo == "Clase día del Amigo 2x1"){
     var claseInvitacion = {
       invitadoNombre : (buscoColumna(Preguntas.invitadoNombre,sheet) != 0) ? valorPlanilla(Preguntas.invitadoNombre) : "",
@@ -161,7 +157,6 @@ function procesoRespuestas(e, TituloEvento){
     }
   }
   var chequeoTKS = true;
-  // Logger.log("evento por dia?" + eventoPorUnDia) ;
 
   //SI ES UN RETIRO DE VARIOS DÍAS ADMITE PAGO POR DÍA
   if (eventoPorDias != ""){
@@ -200,17 +195,14 @@ function procesoRespuestas(e, TituloEvento){
 
     }
   }
-    // Logger.log(' tipotk: '+ TipoTKyAbono);
 
   if(TipoTKyAbono == 'SI, TENGO TARJETA KADAMPA'){
-    // Logger.log('pasa por if tipotk: '+ TipoTKyAbono);
     var tieneTK = chequeoTkActiva(mail, datosMail, datosEvento, TipoTKyAbono, Pais);
       } else if(Pais == 'Uruguay'){
           tieneTK = 'SIN MEMBRESIA-UY';
         } else{
             tieneTK = 'SIN MEMBRESIA';
   }
-  // Logger.log('resultado de membresía para determinar pago: '+ tieneTK);
   if (chequeoTKS){
     switch (tieneTK)  {
       case 'TK CLASES':
@@ -342,10 +334,23 @@ function procesoRespuestas(e, TituloEvento){
     envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
   }
   if(completarDatos){
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Nombre',sheet)).setValue(datosEvento.NombreUsuario);
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Apellido',sheet)).setValue(datosEvento.ApellidoUsuario);
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Dirección de correo electrónico',sheet)).setValue(datosEvento.MailUsuario);
-    ActiveSheet.getRange(ActiveRow, buscoColumna('Teléfono celular',sheet)).setValue(datosEvento.TelefonoUsuario);
+    agregarDatosEnColumnaSiExiste(ActiveSheet, ActiveRow, 'Nombre', datosEvento.NombreUsuario);
+    agregarDatosEnColumnaSiExiste(ActiveSheet, ActiveRow, 'Apellido', datosEvento.ApellidoUsuario);
+    agregarDatosEnColumnaSiExiste(ActiveSheet, ActiveRow, 'Dirección de correo electrónico', datosEvento.MailUsuario);
+    agregarDatosEnColumnaSiExiste(ActiveSheet, ActiveRow, '¿De qué barrio/provincia sos?', datosEvento.barrio);
+    agregarDatosEnColumnaSiExiste(ActiveSheet, ActiveRow, 'Teléfono celular', datosEvento.TelefonoUsuario);
+  }
+  function agregarDatosEnColumnaSiExiste(ActiveSheet, ActiveRow, columna, valor) {
+    var dataRange = ActiveSheet.getDataRange().getValues();
+    var headerRow = dataRange[0];
+    // Busca el índice de la columna por su nombre en la fila de encabezado
+    var columnaIndex = headerRow.indexOf(columna);    
+    if (columnaIndex !== -1) {
+      ActiveSheet.getRange(ActiveRow, columnaIndex).setValue(valor);
+    } else {
+      // La columna no existe, puedes manejar esto de alguna manera, por ejemplo, mostrando un mensaje de error.
+      Logger.log("La columna '" + columna + "' no existe en la hoja.");
+    }
   }
   ActiveSheet.getRange(ActiveRow, buscoColumna('Pendiente',sheet)).setValue(datosEvento.Moneda + 
   datosEvento.aPagar).setHorizontalAlignment('right');
@@ -354,7 +359,10 @@ function procesoRespuestas(e, TituloEvento){
   } else{
     ActiveSheet.getRange(ActiveRow, buscoColumna('Respuesta',sheet)).setValue(seEnvioMail).setBackground('#f02e61').setFontColor('white');
   }
-  
+
+  if (datosEvento.Modalidad == 'PRESENCIAL U ONLINE'){
+    separoModalidadEnSolapas(datosEvento, ModalidadElegida);
+  }
   ActiveSheet.getRange(ActiveRow, 1).setBackground('#b3d1ff');
   SpreadsheetApp.flush();
   function valorPlanilla(valCampo){
@@ -379,9 +387,30 @@ function procesoRespuestas(e, TituloEvento){
   ***                                                        ***
   *************************************************************/
 
-function separoModalidadEnSolapas(datosEvento){
-  if (datosEvento.modalidad == 'PRESENCIAL U ONLINE'){
-    
+function separoModalidadEnSolapas(datosEvento, ModalidadElegida){
+  // Verificar si las hojas "PRESENCIAL" y "ONLINE" existen
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var hojaPresencial = spreadsheet.getSheetByName("PRESENCIAL");
+  var hojaOnline = spreadsheet.getSheetByName("ONLINE");
+
+  // Si las hojas no existen, créalas
+  if (!hojaPresencial) {
+    hojaPresencial = spreadsheet.insertSheet('PRESENCIAL');
+    encabezado(hojaPresencial);
+  }
+  if (!hojaOnline) {
+    hojaOnline = spreadsheet.insertSheet('ONLINE');
+    encabezado(hojaOnline);
+  }
+  var filaAMover = [datosEvento.NombreUsuario, datosEvento.ApellidoUsuario, datosEvento.MailUsuario, datosEvento.centro];
+  if(ModalidadElegida === 'PRESENCIAL'){
+    hojaPresencial.appendRow(filaAMover);
+  } else if (ModalidadElegida === "ONLINE") {
+    hojaOnline.appendRow(filaAMover);
+  }
+  function encabezado(hoja){
+    var columnas = ['Nombre',	'Apellido',	'Dirección de correo electrónico',	'Centro'];
+    hoja.appendRow(columnas);
   }
 }
 
@@ -629,11 +658,9 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
       styleF18 + "<br/>Lugar: " + finStyle + styleF18Blue + "<strong>" + datosEvento.LugarEvento + "</strong>" + finStyle;
     
     var saludoInicial = styleF28 + "¡Hola " + '<strong>' + datosEvento.NombreUsuario + " " + datosEvento.ApellidoUsuario + "</strong>!" + finStyle;
-    Logger.log('youtube programa' + datosEvento.LinkYoutubePrograma);
     if(datosEvento.LinkYoutubeDias != ""){
       datosEvento.LinkYoutube = datosEvento.LinkYoutubeDias;
       datosEvento.LinkYoutubePrograma = "";
-      Logger.log('pasa por dias');
     }else if(datosEvento.LinkYoutubePrograma != ""){
       datosEvento.LinkYoutube = datosEvento.LinkYoutubePrograma;
     }else if(datosEvento.Tipo != "Celebración") {
@@ -903,12 +930,13 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
       correoPlanilla = datosTKCMKA[i][6].toString();
       correoPlanilla = correoPlanilla.trim().toLowerCase();
       if(correoPlanilla == correo){
-        // Logger.log('chequeo mail en cmka tk '+ correoPlanilla + ' ' + correo);
         datosEvento.NombreUsuario = datosTKCMKA[i][0];
         datosEvento.ApellidoUsuario = datosTKCMKA[i][1];
         datosEvento.MailUsuario = correoPlanilla;
         datosEvento.TelefonoUsuario = datosTKCMKA[i][7];
+        datosEvento.barrio = datosTKCMKA[i][8];
         if(datosTKCMKA[i][2] == 'A' ){
+          datosEvento.centro = 'CMKA';
           switch (datosTKCMKA[i][3]){
             case 'CLA':
                   membresiaTK = 'TK CLASES' + tkPais;
@@ -933,7 +961,6 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
       } else{
         if(datosEvento.AplicaDesc == 'P C ZN'){
           buscoPlanillaZN();  
-          Logger.log('hasta cor ' + membresiaTK);
           if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == ''){
             buscoPlanillaCOR();
           }
@@ -951,8 +978,10 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         datosEvento.NombreUsuario = datosTKZN[i][1];
         datosEvento.ApellidoUsuario = datosTKZN[i][2];
         datosEvento.MailUsuario = correoPlanilla;
-        datosEvento.TelefonoUsuario = datosTKZN[i][7];
+        datosEvento.TelefonoUsuario = datosTKZN[i][6];
+        datosEvento.barrio = datosTKCMKA[i][8];
         if(datosTKZN[i][3] == 'A' ){
+          datosEvento.centro = 'Nagaryhuna';
           switch (datosTKZN[i][4]){
             case 'CLA':
                   membresiaTK = 'TK CLASES';
@@ -985,14 +1014,15 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         datosEvento.NombreUsuario = datosTKCOR[i][0];
         datosEvento.ApellidoUsuario = datosTKCOR[i][1];
         datosEvento.MailUsuario = correoPlanilla;
-        datosEvento.TelefonoUsuario = datosTKCOR[i][6];
+        datosEvento.TelefonoUsuario = datosTKCOR[i][7];
+        datosEvento.barrio = datosTKCMKA[i][8];
         if(datosTKCOR[i][2] == 'A' ){
+          datosEvento.centro = 'Córdoba';
           switch (datosTKCOR[i][3]){
             case 'CLA':
                   membresiaTK = 'TK CLASES';
             break;
             case 'COR':
-            Logger.log('pasa por cor cord');
                   membresiaTK = 'TK CORAZÓN';
             break;
             case 'BEN':
@@ -1081,21 +1111,16 @@ function envioLinksAConfirmados(){
       if(i > 0){
         if(inscripcion[i][pendiente] == 0){
           textoPago = (inscripcion[i][pago]).toString().trim().toUpperCase();
-          // Logger.log(textoPago);
           if(textoPago == 'OK'){
             if(inscripcion[i][confirmacion] == ''){
               datosInscripcion = traigoDatosParticipante(i);
               datosCurso = traigoDatosCursos(tituloEvento);
-              // Logger.log("tipo de insc " + datosInscripcion.eventoFinDeSemana);
               if(datosInscripcion.eventoFinDeSemana == 'VOY A PARTICIPAR DEL FIN DE SEMANA'){
                 programa = datosCurso.programaFinDeSemana;
                 datosInscripcion.eventoFinDeSemana = "<br>Tu inscripción: " + datosInscripcion.eventoFinDeSemana;
               } else {
                 programa = datosCurso.programa;
               }
-              // Logger.log(programa);
-              // Logger.log(tituloEvento);
-              // Logger.log(datosCurso.tipo);
               datosMail = CargoDatosMail();
               textoAcceso = chModalidad();
               if(datosCurso.tipo == "Reto 21 dias"){
@@ -1146,7 +1171,6 @@ function envioLinksAConfirmados(){
         }
       }
     }
-    // Logger.log(infoPlanillaCurso);
     return infoPlanillaCurso;
     function valorPlanillaC(valCampo, i, planilla){
       i +=2;
@@ -1342,8 +1366,6 @@ function eventoNoAbierto(datosMail, datosEvento){
     ${datosMail.infoEventoNoAbierto}<br><br>
 
     ${partesMail.pieMail}<br>`;
-    // Logger.log(htmlBody);
-    Logger.log(datosMail.infoEventoNoAbierto);
     // ${e.styleF18}${datosMail.eventoNoAbierto}${e.finStyle}
     var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
     MailApp.sendEmail(datosEvento.MailUsuario, subject, emailBody, advancedOpts);
