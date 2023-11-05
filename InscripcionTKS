@@ -1,11 +1,11 @@
 function emailOnFormSubmit(e) {
   var fechaHoy = new Date();
   var dia = fechaHoy.getDate();
-  var tkBenefactor = 2200;
-  var tkCorazon = 1800;
-  var tkClases1 = 1200;
-  var tkClases2 = 900;
-  var tkClases3 = 600;
+  var tkBenefactor = 12600;
+  var tkCorazon = 6900;
+  var tkClases1 = 5900;
+  var tkClases2 = 5000;
+  var tkClases3 = 3000;
   var btPagoTkClases = "";
   var tkClasesAPagar = 0;
   var btTkClases1 = "https://bit.ly/3srJYSr";
@@ -52,12 +52,11 @@ function emailOnFormSubmit(e) {
         valTarjeta = tkClases1;
         aPagar = tkClasesAPagar;
         btPago = btPagoTkClases;
-        textoTK = ", pero <br>" +
-        "también podés sumarte en cualquier otro momento abonando un valor proporcional. <br>" +
-        "Aquí te compartimos la escala de precios que varían según la fecha en la cual realices el pago:</p>" +
-        "<p>- Si abonas del 01 al 10: El valor es $1200 <br>" +
-        "- Si abonas del 11 al 20: El valor es $900 <br>" +
-        "- Si abonas del 21 al 30: El valor es $600</p> <br>";
+        textoTK = `, pero también podés sumarte en cualquier otro momento abonando un valor proporcional. </p>
+        <p> Aquí te compartimos la escala de precios que varían según la fecha en la cual realices el pago:</p>
+        <p>- Si abonas del 01 al 10: El valor es ${tkClases1} <br>
+        - Si abonas del 11 al 20: El valor es ${tkClases2} <br>
+        - Si abonas del 21 al 30: El valor es ${tkClases3}</p> <br>`;
     break;
     case 'TARJETA KADAMPA CORAZÓN':
         aPagar = tkCorazon;
@@ -76,40 +75,41 @@ function emailOnFormSubmit(e) {
     break;
   }  
   subject = subject + eleccionTk;
-  var lineaPago1 = "<br/><font size='3' color=\"black\"><strong>👉 PODÉS ABONAR CON TARJETA DE DÉBITO/CRÉDITO: </strong></font>";
+  var lineaPago1 = "<br/><font size='3' color=\"black\"><strong>👇 </strong></font>";
   var lineaPago2 = "<br/><a href='"+ btPago + "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png'" +
                     "height='59' width='319'></a>";
   
   // emailBody is for those devices that can't render HTML, is plain text
-  var emailBody = "¡Hola! " + "\nGracias por tu inscripción la tarjeta Kadampa. "+
+  var emailBody = "¡Hola! " + "\n Muchas gracias por tu inscripción a la tarjeta Kadampa. "+
     "\nPróximamente recibirás un email con más detalles y tu información de pago." + "\nMuchas Gracias";
   var htmlBody =  "<font size = '3' color=\"black\">¡Hola " + "<font color=\"black\"><strong>" + 
   nombre + " " + apellido + "</strong></font>" + "!</ font>" +
   "<p>Muchas gracias por inscribirte a la tarjeta Kadampa! ☺️💞</p>" +
-  "<p>Te contamos que el valor de la " + eleccionTk + " es de $" + valTarjeta + " abonando del 1 al 10" + textoTK +
-  "<br><font size='3' color=\"black\">Tu importe a abonar es: $" + aPagar + "</font>" + lineaPago1 + lineaPago2 +
-  "<p>También tenés la opción de abonar con Transferencia Bancaria, aquí te dejamos nuestros datos.</p>"+
+  "<p>Te informamos que el valor de la " + eleccionTk + " es de $" + valTarjeta + " abonando del 1 al 10" + textoTK +
+  //"<br><font size='3' color=\"black\">Tu importe a abonar es: $" + aPagar + "</font>" + lineaPago1 + lineaPago2 +
+  "<br><font size='3' color=\"black\">Tu importe a abonar es: $" + aPagar + "</font>" +
+  "<p>AQUÍ TE CONTAMOS LAS FORMAS DE PAGO: </p>"+
+  "<p>1. TRANSFERENCIA BANCARIA</p>"+
   "<section>Nombre: CENTRO DE MEDITACIÓN KADAMPA ARGENTINA <br>"+
   "Banco Santander Río Cuenta Corriente en Pesos Nro:<br>"+
   "001896/8 Sucursal: 429 <br>"+
   "CUIT 30-71440026-2 <br>"+
   "CBU: 0720429020000000189686 <br>"+
   "ALIAS: PAZ.PURA.INTERIOR <br></section>" +
-  "<p>Para agilizar la registración de tu pago, te pedimos que nos ayudes enviándonos" +
-  "una foto del comprobante de pago por mail. <br>"+
-  "¡¡Muchas gracias!!</p>"+
-  "<p>Cuando recibamos el comprobante de pago, te contactamos para enviarte la información " +
-  "necesaria para que puedas acceder a la transmisión online de las actividades. </p>"+
-  "<p>¡ESTAMOS MUY FELICES QUE TE HAYAS SUMADO A LAS ACTIVIDADES"+
-  "DE NUESTRO CENTRO DE MEDITACION KADAMPA! </p>"+
-  "<p>Esperamos que lo disfrutes, te envío un cálido saludo.</p>"
+  "<p>2. CON TARJETA DE CRÉDITO/DÉBITO: Únicamente de manera presencial en nuestro Centro, ubicado en Serrano 1316, Palermo.</p>"+
+  "<p>Para agilizar la registración de tu pago, nos ayudaría muchísimo, que nos envíes" +
+  " una foto del comprobante de pago por mail🥰. <br>"+
+   "<p> Tené en cuenta que podemos demorarnos hasta 48 hs en registrar tu pago. Una vez registrado, recibirás un correo electrónico con toda la información " +
+  "necesaria para participar de las actividades. </p>"+
+  "<p>¡ESTAMOS MUY FELICES QUE TE HAYAS SUMADO AL CENTRO DE MEDITACIÓN KADAMPA ARGENTINA! </p>"+
+    "<p>Esperamos que lo disfrutes, un cálido saludo.</p>"
 
   // More info for Advanced Options Parameters 
   // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
-  var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
+  var advancedOpts = { name: "Registro - CMKA", htmlBody: htmlBody};
   MailApp.sendEmail(mail, subject, emailBody, advancedOpts);
   // Actualiza los campos en la planilla de cálculo del evento
-  activeSheet.getRange(activeRow, 12).setValue("CORREO ENVIADO");
+  activeSheet.getRange(activeRow, 12).setValue("ENVIADA");
   activeSheet.getRange(activeRow, 11).setValue('$' + aPagar);
   activeSheet.getRange(activeRow, 1).setBackground('#b3d1ff');
   activeSheet.getRange(activeRow, 12).setBackground('green');
@@ -140,7 +140,16 @@ function chequeoTkActiva(correo){
           break;
         }
       }
+    } else{
+      // cargoNuevaTK();
     }
   }
   return membresiaTK;
+}
+
+function cargoNuevaTK(){
+  colTemporal = sheetDatosTKS[0].indexOf('Nombre')+1;  
+  var nombre = activeSheet.getRange(activeRow, colTemporal).getValue();
+
+
 }
