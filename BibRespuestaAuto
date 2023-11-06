@@ -346,7 +346,7 @@ function procesoRespuestas(e, TituloEvento){
     // Busca el índice de la columna por su nombre en la fila de encabezado
     var columnaIndex = headerRow.indexOf(columna);    
     if (columnaIndex !== -1) {
-      ActiveSheet.getRange(ActiveRow, columnaIndex).setValue(valor);
+      ActiveSheet.getRange(ActiveRow, columnaIndex+1).setValue(valor);
     } else {
       // La columna no existe, puedes manejar esto de alguna manera, por ejemplo, mostrando un mensaje de error.
       Logger.log("La columna '" + columna + "' no existe en la hoja.");
@@ -650,7 +650,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     if(datosEvento.NombreEvento != ""){
       datosEvento.NombreEvento = " - " + datosEvento.NombreEvento;
     }
-    var DatosEvento = styleF22 + "<br/><strong>DETALLES DEL EVENTO: </strong><br/>" + finStyle +
+    var DatosEvento = styleF22 + "<br/><strong>DETALLES DE LA INSCRIPCIÓN: </strong><br/>" + finStyle +
       styleF18Blue + "<strong>" + TituloEvento + "</strong>" +
       datosEvento.NombreEvento + finStyle +
       //styleF18 + "<br/>Fecha y hora: " + datosEvento.FechaEvento + " " + datosEvento.HoraEvento + finStyle +
@@ -797,7 +797,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
 function ArmoPago(datosEvento, datosMail){
   if (datosEvento['aPagar'] > 0 ){
     datosEvento['TextoInicial'] = datosMail['TextoInicial'];
-    var LineaPago1 = "<br><strong>El valor del evento: " + datosEvento.Moneda + datosEvento.ValorEvento + "</strong><br>";
+    var LineaPago1 = "<br><strong>El valor de la inscripción: " + datosEvento.Moneda + datosEvento.ValorEvento + "</strong><br>";
     var LineaPago2 = '';
     //SE DESACTIVA TEMPORALMENTE EL BOTON DE PAGO, SOLO PAGO POR TRANSFER
     // var LineaPago2 = "<br><a href='"+ datosEvento.botonPago +
