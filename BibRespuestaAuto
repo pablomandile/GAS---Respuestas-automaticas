@@ -1,5 +1,11 @@
+function envioMail(mail, asunto, cuerpo, config){
 /*************************************************************
-*** PRIMER PROCESO QUE SE EJECUTA AL ABRIR LA PLANILLA     ***
+***  DESACTIVAR PARA PRUEBAS EL ENVÍO DE MAIL             ***/
+  MailApp.sendEmail(mail, asunto, cuerpo, config);
+}
+
+/*************************************************************
+***  PROCESO QUE SE EJECUTA AL ABRIR LA PLANILLA           ***
 *** VINCULADA CON EL EVENTO PARA SU FORMATEO               ***
 *** Y AGREGAR UN CUSTOM MENU                               ***
 *************************************************************/
@@ -134,8 +140,6 @@ function procesoRespuestas(e, TituloEvento){
   var datosEvento = buscaCurso(TituloEvento, Pais);
   var datosMail = CargoDatosMail();  
   
-  Logger.log(datosEvento.Modalidad);
-
   if(datosEvento.Modalidad == 'ONLINE' || datosEvento.Modalidad == 'PRESENCIAL U ONLINE'){
     if (TipoTKyAbono == "VALOR UNICO" || TipoTKyAbono == ""){
       TipoTKyAbono = "SI, TENGO TARJETA KADAMPA";
@@ -216,7 +220,6 @@ function procesoRespuestas(e, TituloEvento){
         tkTipoInscripcion("Valor1DiaTKCLA", "ValorAbono", "BotondePago1DiaTKCLA", "BotondePagoAbono");
       break;
       case 'TK CORAZÓN':
-        Logger.log('pasa por corazon');
         tkTipoInscripcion("Valor1DiaTKCOR", "ValorTKCorazon", "BotondePago1DiaTKCOR", "BotondePagoTKCorazon");
       break; 
       case 'TK BENEFACTOR':
@@ -245,7 +248,7 @@ function procesoRespuestas(e, TituloEvento){
         Logger.log('pasa por general');
         tkTipoInscripcion("Valor1Dia", "ValorEvento", "BotondePago1Dia", "botonPago");
         celebracionIniciacionSabado();
-        eventoNoAbierto(datosMail, datosEvento);
+        eventoNoAbierto(datosMail, datosEvento, ModalidadElegida);
       break;
       case 'SIN MEMBRESIA-UY':
         tkTipoInscripcion("ValorDol1Dia", "ValorDolares", "BotonPagoDolares1Dia", "BotonPagoDolares");
@@ -771,7 +774,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
       // https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)
       var advancedOpts = { name: "Inscripciones - CMKA", htmlBody: htmlBody};
       //DESACTIVO MAIL PRUEBAS
-      // MailApp.sendEmail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
+      envioMail(datosEvento.MailUsuario, datosEvento.subject, emailBody, advancedOpts);
       if (claseInvitacion.invitadoNombre != "" && datosEvento.aPagar == 0){
         var htmlBodyinvitado =  encabezadoMail + "¡Hola " + "<strong>" +
         claseInvitacion.invitadoNombre + "</strong>" + "!" + "<br/><br/>Te contamos que " 
@@ -988,7 +991,6 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         if(datosEvento.AplicaDesc == 'P C ZN'){
           Logger.log('Busca en ZN');
           buscoPlanillaZN();  
-          Logger.log(membresiaTK);
           if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == 'SIN MEMBRESIA-UY'){
             Logger.log('Va a buscar otros centros');
             buscoPlanillaCOR();
@@ -1118,12 +1120,6 @@ function envioLinksAConfirmados(){
       } else{
         Browser.msgBox('ENVÍO DE MAILS A CONFIRMADOS', 'No hay correos a enviar', Browser.Buttons.OK); 
       }
-      // var mensaje = '<p>La acción ha sido realizada con éxito.</p> <p>Correos enviados: '+ correosEnviados + '</p>';
-      // var msg = HtmlService.createHtmlOutput(mensaje)
-      //       .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-      //       .setWidth(150)
-      //       .setHeight(200);
-      // ui .showModalDialog(msg, 'ENVÍO DE MAILS A CONFIRMADOS',).Buttons.OK;
     }
   }
 
@@ -1131,7 +1127,7 @@ function envioLinksAConfirmados(){
     var textoPago = '';
     for(var i = 0;i<inscripcion.length; i++){
       if(i > 0){
-        if(inscripcion[i][pendiente] == 0){
+        if(inscripcion[i][pendiente] == '$0'){
           textoPago = (inscripcion[i][pago]).toString().trim().toUpperCase();
           if(textoPago == 'OK'){
             if(inscripcion[i][confirmacion] == ''){
@@ -1154,7 +1150,8 @@ function envioLinksAConfirmados(){
                               datosInscripcion.apellido + "</strong>!" + e.finStyle;
               htmlBody = partesMail.encabezadoMail + saludoInicial + e.styleF22 + datosMail.TextoInicialConfirmadoXPago + e.finStyle + 
                           e.styleF22Tab + 'Membresía: ' + e.finStyle + e.styleF22Morado + datosInscripcion.membresia + e.finStyle + '<br>' +
-                          e.styleF18 + datosInscripcion.completoDia + datosInscripcion.completoDiaRetiro + datosInscripcion.eventoFinDeSemana +
+                          e.styleF18 + datosInscripcion.completoDia + datosInscripcion.completoDiaRetiro + 
+                          datosInscripcion.eventoFinDeSemana +
                           " " + datosInscripcion.diasQueParticipa + datosInscripcion.introduccion + e.finStyle + 
                           datosEvento + e.styleF18 + programa + e.finStyle + e.styleF22Morado + datosCurso.webDelEvento +
                           e.finStyle + e.styleF18 + textoAcceso + e.finStyle + 
@@ -1179,7 +1176,7 @@ function envioLinksAConfirmados(){
     var datosCursos = sheetDatosCursos.getRange(2, 1, sheetDatosCursos.getLastRow(),sheetDatosCursos.getLastColumn()).getValues();
 
     for(var i = 0;i<datosCursos.length; i++){
-      if(datosCursos[i][0] == tituloEvento){
+      if(datosCursos[i][1] == tituloEvento){
         var infoPlanillaCurso = {
             fechaEvento:valorPlanillaC('Fecha', i, DC), 
             horaEvento:valorPlanillaC('Hora', i, DC), 
@@ -1374,8 +1371,8 @@ function agregoNuevaPersonaNewsletter(personaSinTK){
   }
 }
 
-function eventoNoAbierto(datosMail, datosEvento){
-  if(datosEvento.ModalidadElegida == 'ONLINE'){
+function eventoNoAbierto(datosMail, datosEvento, ModalidadElegida){
+  if(ModalidadElegida == 'ONLINE'){
     if(datosEvento.Abierto == 'Sólo TK'){
       datosEvento.envioMail = false;
       var subject = "Inscripción no válida sin membresía";
