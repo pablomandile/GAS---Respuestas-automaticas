@@ -323,13 +323,13 @@ function procesoRespuestas(e, TituloEvento){
       if (Pais == 'Argentina'){
         grabaciones = "Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabaciones + "<br>" 
           + "<br><a href='"+ datosEvento.BotonPagoGrabaciones + 
-          "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>";
+          "'><img src='https://meditarenargentina.org/wp-content/uploads/2025/06/Sin-titulo-1-300x100-1.png' height='59' width='300'></a>";
         datosEvento.aPagar += parseInt(datosEvento.ValorGrabaciones);
           
       } else{
         grabaciones = "Grabaciones del evento: " + datosEvento.Moneda + datosEvento.ValorGrabacionesDol + "<br>"
           + "<br><a href='"+ datosEvento.BotonPagoDolGrabaciones + 
-          "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a>";
+          "'><img src='https://meditarenargentina.org/wp-content/uploads/2025/06/Sin-titulo-1-300x100-1.png' height='59' width='300'></a>";
         datosEvento.aPagar += parseFloat(datosEvento.ValorGrabacionesDol);
 
       }
@@ -344,6 +344,7 @@ function procesoRespuestas(e, TituloEvento){
   if (infoTKAbono == "SI, me gustaría!"){
     envioInfoTKyAbono(datosMail, sheet, ActiveSheet, ActiveRow, Nombre, Apellido, mail);
   }
+  Logger.log(datosEvento.barrio);
   if(completarDatos){
     agregarDatosEnColumnaSiExiste(ActiveSheet, ActiveRow, 'Nombre', datosEvento.NombreUsuario);
     agregarDatosEnColumnaSiExiste(ActiveSheet, ActiveRow, 'Apellido', datosEvento.ApellidoUsuario);
@@ -652,7 +653,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
     
     // Armado de información del evento
     var encabezadoMail = "<table width='720' border='0' align='center' bgcolor='white' cellpadding='0' cellspacing='0'>"+
-          "<tr bgcolor='#2784d6'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-Social4.png' alt='Social Media' width='720' usemap='#m_-6367196319079066917_Redes' title='CMKA Social' border='0' style='display:block'>"+
+          "<tr bgcolor='#2784d6'><td><img src='https://meditarenargentina.org/wp-content/uploads/2025/06/Header-Social4.png' alt='Social Media' width='720' usemap='#m_-6367196319079066917_Redes' title='CMKA Social' border='0' style='display:block'>"+
               "<map name='m_-6367196319079066917_Redes' id='m_-6367196319079066917Redes'>"+
               "<area shape='rect' coords='01,01,90,70'  href='https://www.facebook.com/meditarenargentina' alt='Facebook CMKA' target='_blank'>"+
               "<area shape='rect' coords='92,01,188,70' href='https://www.instagram.com/meditarenargentina/' alt='Instagram CMKA' target='_blank'>"+
@@ -661,7 +662,7 @@ function ArmoMailyEnvio(datosEvento, datosMail, TituloEvento, claseInvitacion, A
               "<area shape='rect' coords='412,01,512,70' href='https://api.whatsapp.com/send?phone=541161495976' alt='Whatsapp' target='_blank'>"+
               "<area shape='rect' coords='515,01,616,70' href='https://twitter.com/meditarenarg' alt='Twitter CMKA' target='_blank'>"+
               "<area shape='rect' coords='618,01,720,70' href='https://meditarenargentina.org/' alt='web Centro de meditación KadampaArgentina' target='_blank'>"+
-              "</map></td></tr><tr bgcolor='#fff'><td><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/Header-720x253-1.png' width='720' style='display:block' alt='Banner Header'>"+
+              "</map></td></tr><tr bgcolor='#fff'><td><img src='https://meditarenargentina.org/wp-content/uploads/2025/06/Header-720x253-1.png' width='720' style='display:block' alt='Banner Header'>"+
               "</td></tr><tr><td valign='middle' style='margin-bottom:32px;font-family:Google Sans,Roboto,Arial,Helvetica,sans-serif;font-style:normal;font-size:28px;line-height:36px;color:#3c4043'>";
     var inicioPieMail = "</td></tr><tr height='150px' bgcolor='#4575ec'><td align='center' valign='middle' style='padding:0px 18px 40px 18px;'>" + styleF28White + datosMail.Saludo + finStyle ;
     var finPieMail ="</td></tr><tr bgcolor='#fff'><td align='center' style='padding:20px 18px'> <a href='https://meditarenargentina.org/' target='blank'><img src='https://meditarenargentina.org/mailKadampa/logo_Centro.png' alt='Logo CMKA' width='200' border='0'></a></td></tr></table>";
@@ -820,7 +821,7 @@ function ArmoPago(datosEvento, datosMail){
     datosEvento['TextoInicial'] = datosMail['TextoInicial'];
     datosEvento.LineaPago1 = "<br><strong>El valor de la inscripción: " + datosEvento.Moneda + datosEvento.ValorEvento + "</strong><br>";
     datosEvento.LineaPago2 = "<br><a href='" + datosEvento.botonPago +
-    "'><img src='https://meditarenargentina.org/wp-content/uploads/2021/12/btnabonar.png' height='59' width='319'></a><br>";
+    "'><img src='https://meditarenargentina.org/wp-content/uploads/2025/06/Sin-titulo-1-300x100-1.png' height='59' width='300'></a><br>";
 
     datosEvento['LineasDePago'] = datosEvento.LineaPago1 + datosEvento.LineaPago2;
     datosEvento.subject = "¿Confirmaste tu inscripción a " + datosEvento.Asunto + "?";
@@ -948,12 +949,13 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   var datosTKCMKA = sheetDatosTKCMKA.getRange(3, 1, sheetDatosTKCMKA.getLastRow(),9).getValues();
    var datosTKCOR = sheetDatosTKCOR.getRange(3, 1, sheetDatosTKCOR.getLastRow(),9).getValues();
   var ss2 = SpreadsheetApp.openById('1glxhF229H3fuWPrpzExpPX1YPcXhGrY1-mBw8TfToMk');
-  var sheetDatosTKZN = ss2.getSheetByName('TK 2023');
+  var sheetDatosTKZN = ss2.getSheetByName('Año Actual');
   var datosTKZN = sheetDatosTKZN.getRange(3, 1, sheetDatosTKZN.getLastRow(), 9).getValues();
 
   Logger.log('pasa por chequeo tk activa');
+  Logger.log(correo);
   buscoPlanillaCMKA();
-
+  
   function buscoPlanillaCMKA(){
     for(var i = 0;i<datosTKCMKA.length; i++){
       correoPlanilla = datosTKCMKA[i][6].toString();
@@ -1010,7 +1012,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         datosEvento.ApellidoUsuario = datosTKZN[i][2];
         datosEvento.MailUsuario = correoPlanilla;
         datosEvento.TelefonoUsuario = datosTKZN[i][6];
-        datosEvento.barrio = datosTKCMKA[i][8];
+        datosEvento.barrio = datosTKZN[i][8];
         if(datosTKZN[i][3] == 'A' ){
           datosEvento.centro = 'Nagaryhuna';
           switch (datosTKZN[i][4]){
@@ -1046,7 +1048,9 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
         datosEvento.ApellidoUsuario = datosTKCOR[i][1];
         datosEvento.MailUsuario = correoPlanilla;
         datosEvento.TelefonoUsuario = datosTKCOR[i][7];
-        datosEvento.barrio = datosTKCMKA[i][8];
+        datosEvento.barrio = datosTKCOR[i][8];
+        Logger.log(datosTKCMKA[i][8]);
+        Logger.log(datosEvento.barrio);
         if(datosTKCOR[i][2] == 'A' ){
           datosEvento.centro = datosTKCOR[i][8];;
           switch (datosTKCOR[i][3]){
@@ -1072,6 +1076,7 @@ function chequeoTkActiva(correo, datosMail, datosEvento, TipoTKyAbono, Pais){
   if (membresiaTK == 'SIN MEMBRESIA' || membresiaTK == 'SIN MEMBRESIA-UY'){
     datosEvento.textoErrorMembresia = datosMail.errorEnMembresia1 + '<strong>' + TipoTKyAbono + '</strong>' + datosMail.errorEnMembresia2;
   }
+  Logger.log(datosEvento.barrio);
   return membresiaTK;
 }
 /**************************************************************
